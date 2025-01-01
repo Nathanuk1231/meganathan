@@ -20,8 +20,10 @@
             font-size: 20px;
             margin: auto;
         }
-        /* Styling for the draggable notes */
+        /* Styling for the draggable and resizable notes */
         .note {
+            width: 200px;
+            height: 150px;
             background-color: #fff5b1;
             border: 1px solid #ccc;
             padding: 10px;
@@ -29,15 +31,24 @@
             position: absolute;
             cursor: move;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            width: min-content;
-            height: min-content;
         }
         .note textarea {
-            width: 200px;
-            height: 150px;
+            width: 100%;
+            height: 100%;
             border: none;
             background: transparent;
             font-size: 14px;
+            resize: none;
+        }
+        /* Styling for the resize handle */
+        .resize-handle {
+            width: 16px;
+            height: 16px;
+            background-color: #ccc;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
         }
     </style>
 </head>
@@ -48,14 +59,16 @@
         <h6>Hello, this is my first website</h6>
         <p>Hello, this is my first website</p>
         
-        <!-- Draggable Note 1 -->
+        <!-- Draggable and Resizable Note 1 -->
         <div class="note" id="note1" style="top: 100px; left: 50px;">
             <textarea placeholder="Type your note here..."></textarea>
+            <div class="resize-handle"></div>
         </div>
 
-        <!-- Draggable Note 2 -->
+        <!-- Draggable and Resizable Note 2 -->
         <div class="note" id="note2" style="top: 100px; left: 300px;">
             <textarea placeholder="Type your note here..."></textarea>
+            <div class="resize-handle"></div>
         </div>
     </div>
 
@@ -87,9 +100,43 @@
             }
         }
 
-        // Initialize draggable functionality for notes
+        // Make the notes resizable
+        function makeResizable(element) {
+            const resizeHandle = element.querySelector('.resize-handle');
+            let isResizing = false;
+            let initialWidth, initialHeight, initialX, initialY;
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                initialWidth = element.offsetWidth;
+                initialHeight = element.offsetHeight;
+                initialX = e.clientX;
+                initialY = e.clientY;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (isResizing) {
+                    const width = initialWidth + (e.clientX - initialX);
+                    const height = initialHeight + (e.clientY - initialY);
+                    element.style.width = `${width}px`;
+                    element.style.height = `${height}px`;
+                }
+            }
+
+            function onMouseUp() {
+                isResizing = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        // Initialize draggable and resizable functionality for notes
         makeDraggable(document.getElementById('note1'));
         makeDraggable(document.getElementById('note2'));
+        makeResizable(document.getElementById('note1'));
+        makeResizable(document.getElementById('note2'));
     </script>
 </body>
 </html>
