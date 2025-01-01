@@ -53,6 +53,10 @@
     </style>
 </head>
 <body>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="games.html">Games</a>
+    </nav>
     <div class="container">
         <h1>Hello, this is my first weeeeeeeeeeeeeeeeeeeeeeeeeeeeebsite</h1>
         <h2>Hello, this is my first website</h2>
@@ -114,6 +118,7 @@
                 initialY = e.clientY;
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
+                e.preventDefault(); // Prevent dragging when resizing
             });
 
             function onMouseMove(e) {
@@ -140,7 +145,3 @@
     </script>
 </body>
 </html>
-<nav>
-  <a href="index.html">Home</a>
-  <a href="games.html">Games</a>
-</nav>
