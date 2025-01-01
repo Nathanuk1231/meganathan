@@ -4,32 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>meganathan</title>
-</head>
-
     <style>
         body {
             background-color: #abdbe3;
             color: #000;
-            font-family: Arial,  Helvetica, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
         }
-               .container {
+        .container {
             background-color: #f4f4f4;
             margin: auto;
             padding: 10px 20px;
             border-radius: 15px;
         }
-        .container p{
+        .container p {
             font-size: 20px;
             margin: auto;
         }
-
+        /* Styling for the draggable notes */
         .note {
             width: 200px;
             height: 150px;
             background-color: #fff5b1;
             border: 1px solid #ccc;
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 8px;
             position: absolute;
             cursor: move;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
@@ -43,23 +41,27 @@
             resize: none;
         }
     </style>
+</head>
 <body>
-     <div class="container"> 
-        <h1>Hello this is my first weeeeeeeeeeeeeeeeeeeeeeeeeeeeebsite</h1>
-        <h2>Hello this is my first website</h2>
-        <h6>Hello this is my first website</h6>
-        <p>Helllo this is my first website</p>  
+    <div class="container">
+        <h1>Hello, this is my first weeeeeeeeeeeeeeeeeeeeeeeeeeeeebsite</h1>
+        <h2>Hello, this is my first website</h2>
+        <h6>Hello, this is my first website</h6>
+        <p>Hello, this is my first website</p>
+        
+        <!-- Draggable Note 1 -->
+        <div class="note" id="note1" style="top: 100px; left: 50px;">
+            <textarea placeholder="Type your note here..."></textarea>
+        </div>
 
-         <div class="note" id="note1" style="top: 100px; left: 50px;">
-             <texarea placeholder="Type u'r note here my friend"></texarea>
-         </div>
-
+        <!-- Draggable Note 2 -->
         <div class="note" id="note2" style="top: 100px; left: 300px;">
-             <texarea placeholder="Type u'r note here my friend"></texarea>
-         </div>
+            <textarea placeholder="Type your note here..."></textarea>
+        </div>
     </div>
 
     <script>
+        // Make the notes draggable
         function makeDraggable(element) {
             let isDragging = false;
             let offsetX, offsetY;
@@ -69,7 +71,7 @@
                 offsetX = e.clientX - element.getBoundingClientRect().left;
                 offsetY = e.clientY - element.getBoundingClientRect().top;
                 document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);                
+                document.addEventListener('mouseup', onMouseUp);
             });
 
             function onMouseMove(e) {
@@ -86,9 +88,9 @@
             }
         }
 
+        // Initialize draggable functionality for notes
         makeDraggable(document.getElementById('note1'));
         makeDraggable(document.getElementById('note2'));
-
     </script>
 </body>
 </html>
