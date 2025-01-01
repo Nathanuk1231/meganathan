@@ -83,11 +83,14 @@
             let offsetX, offsetY;
 
             element.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                offsetX = e.clientX - element.getBoundingClientRect().left;
-                offsetY = e.clientY - element.getBoundingClientRect().top;
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
+                // Only start dragging if not resizing
+                if (e.target !== element.querySelector('.resize-handle')) {
+                    isDragging = true;
+                    offsetX = e.clientX - element.getBoundingClientRect().left;
+                    offsetY = e.clientY - element.getBoundingClientRect().top;
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                }
             });
 
             function onMouseMove(e) {
@@ -116,9 +119,9 @@
                 initialHeight = element.offsetHeight;
                 initialX = e.clientX;
                 initialY = e.clientY;
+                e.stopPropagation(); // Prevent drag from triggering when resizing
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
-                e.preventDefault(); // Prevent dragging when resizing
             });
 
             function onMouseMove(e) {
