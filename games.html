@@ -4,10 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Games</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .game-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .game {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 300px;
+      height: 400px;
+    }
+  </style>
 </head>
 <body>
   <h1>Games</h1>
-  <iframe src="https://cdn.htmlgames.com/ChristmasBuster/" width="800" height="600"></iframe>
+  <div class="game-container">
+    <div class="game">
+      <iframe src="https://example.com/tic-tac-toe" width="100%" height="100%" frameborder="0"></iframe>
+      <p>Tic-Tac-Toe</p>
+    </div>
+    <div class="game">
+      <iframe src="https://example.com/snake" width="100%" height="100%" frameborder="0"></iframe>
+      <p>Snake</p>
+    </div>
+    <div class="game">
+      <iframe src="https://example.com/pacman" width="100%" height="100%" frameborder="0"></iframe>
+      <p>Pac-Man</p>
+    </div>
+  </div>
 </body>
 </html>
-
