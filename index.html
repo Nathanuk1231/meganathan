@@ -57,18 +57,33 @@
         .nav a:hover {
             text-decoration: underline;
         }
+        .content {
+            padding: 20px;
+        }
     </style>
     <script>
         function goToHomepage() {
             document.body.innerHTML = `
                 <div class='nav'>
-                    <a href='#gaming'>Gaming</a>
-                    <a href='#about'>About Me</a>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
                 </div>
-                <div class='container'>
+                <div id='content' class='content'>
                     <h1>Welcome to the Homepage</h1>
                     <p>Edit the About Me section as needed.</p>
                 </div>
+            `;
+        }
+        function showGaming() {
+            document.getElementById('content').innerHTML = `
+                <h1>Gaming Section</h1>
+                <iframe src='https://www.miniclip.com/games/en/' width='800' height='600' style='border:none;'></iframe>
+            `;
+        }
+        function showAbout() {
+            document.getElementById('content').innerHTML = `
+                <h1>About Me</h1>
+                <p>This is the About Me section. You can edit this content as needed.</p>
             `;
         }
     </script>
