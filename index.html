@@ -37,17 +37,23 @@
             font-size: 1.2rem;
             border-radius: 5px;
             transition: 0.3s;
+            cursor: pointer;
         }
         .button:hover {
             background: #ff4500;
         }
     </style>
+    <script>
+        function handleButtonClick() {
+            alert('Button clicked! Welcome to the cool website!');
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to My Cool Website</h1>
         <p>This is a simple but stylish website built with HTML and CSS. Enjoy the gradient background and clean design!</p>
-        <a href="#" class="button">Get Started</a>
+        <button class="button" onclick="handleButtonClick()">Get Started</button>
     </div>
 </body>
 </html>
