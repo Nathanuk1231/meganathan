@@ -42,10 +42,34 @@
         .button:hover {
             background: #ff4500;
         }
+        .nav {
+            background: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
     </style>
     <script>
-        function handleButtonClick() {
-            alert('Button clicked! Welcome to the cool website!');
+        function goToHomepage() {
+            document.body.innerHTML = `
+                <div class='nav'>
+                    <a href='#gaming'>Gaming</a>
+                    <a href='#about'>About Me</a>
+                </div>
+                <div class='container'>
+                    <h1>Welcome to the Homepage</h1>
+                    <p>Edit the About Me section as needed.</p>
+                </div>
+            `;
         }
     </script>
 </head>
@@ -53,7 +77,7 @@
     <div class="container">
         <h1>Welcome to My Cool Website</h1>
         <p>This is a simple but stylish website built with HTML and CSS. Enjoy the gradient background and clean design!</p>
-        <button class="button" onclick="handleButtonClick()">Get Started</button>
+        <button class="button" onclick="goToHomepage()">Get Started</button>
     </div>
 </body>
 </html>
