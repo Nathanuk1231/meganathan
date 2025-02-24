@@ -31,11 +31,6 @@
         window.googleSignIn = function () {
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    // This gives you a Google Access Token. You can use it to access the Google API.
-                    const credential = GoogleAuthProvider.credentialFromResult(result);
-                    const token = credential.accessToken;
-
-                    // The signed-in user info.
                     const user = result.user;
                     localStorage.setItem("userName", user.displayName);
                     window.location.reload(); // Reload to reflect the signed-in user
@@ -198,5 +193,44 @@
         <button class="button" onclick="googleSignOut()">Sign out</button>
         <button class="button" onclick="goToHomepage()">Get Started</button>
     </div>
+    <script>
+        function goToHomepage() {
+            document.body.innerHTML = `
+                <div class='nav'>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
+                    <a href='#' onclick='showChat()'>Chat</a>
+                </div>
+                <div id='content' class='content'>
+                    <h1>Welcome to the Homepage</h1>
+                    <p>Edit the About Me section as needed.</p>
+                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
+                </div>
+            `;
+        }
+        function showGaming() {
+            document.getElementById('content').innerHTML = `
+                <h1>Gaming Section</h1>
+                <iframe src='https://chromedino.com/' width='800' height='400' style='border:none;'></iframe>
+            `;
+        }
+        function showAbout() {
+            document.getElementById('content').innerHTML = `
+                <h1>About Me</h1>
+                <p>This is the About Me section. You can edit this content as needed.</p>
+            `;
+        }
+        function showChat() {
+            document.getElementById('content').innerHTML = `
+                <h1>Chat Room</h1>
+                <div class='chat-container'>
+                    <div id='chatBox' class='chat-box'></div>
+                    <input type='text' id='messageInput' placeholder='Type a message...' />
+                    <button onclick='sendMessage()'>Send</button>
+                </div>
+            `;
+            loadMessages();
+        }
+    </script>
 </body>
 </html>
