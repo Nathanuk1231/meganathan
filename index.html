@@ -7,7 +7,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -37,21 +37,33 @@
             messageInput.value = '';
         };
 
-        // Load Messages
+        // Load Messages & Listen for Changes
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = ""; // Clear existing messages
 
-            onChildAdded(ref(db, "messages"), (snapshot) => {
+            const messagesRef = ref(db, "messages");
+
+            // Listen for new messages
+            onChildAdded(messagesRef, (snapshot) => {
                 const messageData = snapshot.val();
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
+                messageDiv.id = `msg-${snapshot.key}`;
                 messageDiv.innerHTML = `
                     <strong>${messageData.name}:</strong> ${messageData.text}
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>
                 `;
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            // Listen for deleted messages and remove them
+            onChildRemoved(messagesRef, (snapshot) => {
+                const messageElement = document.getElementById(`msg-${snapshot.key}`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
             });
         };
 
