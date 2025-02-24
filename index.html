@@ -1,8 +1,11 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Website</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,16 +26,12 @@
             font-size: 3rem;
             margin-bottom: 20px;
         }
-        p {
-            font-size: 1.2rem;
-            max-width: 600px;
-        }
         .button {
             margin-top: 20px;
             padding: 10px 20px;
             background: #ff6600;
             color: white;
-            text-decoration: none;
+            border: none;
             font-size: 1.2rem;
             border-radius: 5px;
             transition: 0.3s;
@@ -56,20 +55,6 @@
         .nav a:hover {
             text-decoration: underline;
         }
-        .content {
-            padding: 20px;
-        }
-        .cat-image {
-            margin-top: 20px;
-            width: 300px;
-            height: auto;
-            border-radius: 10px;
-        }
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         .chat-box {
             width: 80%;
             max-width: 500px;
@@ -92,7 +77,27 @@
             margin-left: 10px;
         }
     </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to My Cool Website</h1>
+        <button class="button" onclick="goToHomepage()">Get Started</button>
+    </div>
+
     <script>
+        // Firebase setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+            authDomain: "coolwebsitechat.firebaseapp.com",
+            databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+            projectId: "coolwebsitechat",
+            storageBucket: "coolwebsitechat.firebasestorage.app",
+            messagingSenderId: "341962893234",
+            appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         function goToHomepage() {
             document.body.innerHTML = `
                 <div class='nav'>
@@ -128,28 +133,30 @@
                     <button onclick='sendMessage()'>Send</button>
                 </div>
             `;
+            loadMessages();
         }
         function sendMessage() {
-            const chatBox = document.getElementById('chatBox');
             const messageInput = document.getElementById('messageInput');
             if (messageInput.value.trim() === '') return;
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            messageDiv.innerHTML = messageInput.value + " <span class='delete-button' onclick='deleteMessage(this)'>❌</span>";
-            chatBox.appendChild(messageDiv);
+            const newMessageRef = db.ref("messages").push();
+            newMessageRef.set({ text: messageInput.value });
             messageInput.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
-        function deleteMessage(element) {
-            element.parentElement.remove();
+        function loadMessages() {
+            const chatBox = document.getElementById('chatBox');
+            db.ref("messages").on("child_added", snapshot => {
+                const messageData = snapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.innerHTML = messageData.text + ` <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+        function deleteMessage(messageId) {
+            db.ref("messages/" + messageId).remove();
+            showChat();
         }
     </script>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome to My Cool Website</h1>
-        <p>This is a simple but stylish website built with HTML and CSS. Enjoy the gradient background and clean design!</p>
-        <button class="button" onclick="goToHomepage()">Get Started</button>
-    </div>
 </body>
 </html>
