@@ -160,3 +160,44 @@
     </script>
 </body>
 </html>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+        authDomain: "coolwebsitechat.firebaseapp.com",
+        databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+        projectId: "coolwebsitechat",
+        storageBucket: "coolwebsitechat.firebasestorage.app",
+        messagingSenderId: "341962893234",
+        appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput.value.trim() === '') return;
+        push(ref(db, "messages"), { text: messageInput.value });
+        messageInput.value = '';
+    }
+
+    function loadMessages() {
+        const chatBox = document.getElementById('chatBox');
+        onChildAdded(ref(db, "messages"), (snapshot) => {
+            const messageData = snapshot.val();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = messageData.text + ` <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    }
+
+    function deleteMessage(messageId) {
+        remove(ref(db, "messages/" + messageId));
+        showChat();
+    }
+</script>
