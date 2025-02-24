@@ -7,6 +7,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
         // Firebase configuration
@@ -23,11 +24,43 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-        // Ask for user name if not set
-        let userName = localStorage.getItem("userName") || prompt("Enter your name:");
-        if (!userName) userName = "Anonymous";
-        localStorage.setItem("userName", userName);
+        // Function to handle Google Sign-In
+        window.googleSignIn = function () {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    // This gives you a Google Access Token. You can use it to access the Google API.
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const token = credential.accessToken;
+
+                    // The signed-in user info.
+                    const user = result.user;
+                    localStorage.setItem("userName", user.displayName);
+                    window.location.reload(); // Reload to reflect the signed-in user
+                })
+                .catch((error) => {
+                    console.error("Error during sign-in:", error);
+                });
+        };
+
+        // Function to handle sign out
+        window.googleSignOut = function () {
+            signOut(auth).then(() => {
+                localStorage.removeItem("userName");
+                window.location.reload();
+            }).catch((error) => {
+                console.error("Error during sign-out:", error);
+            });
+        };
+
+        // Get user name from localStorage or prompt for it
+        let userName = localStorage.getItem("userName");
+        if (!userName) {
+            // If no user name in localStorage, prompt for sign-in
+            window.googleSignIn();
+        }
 
         // Send Message
         window.sendMessage = function () {
@@ -142,52 +175,28 @@
             cursor: pointer;
             margin-left: 10px;
         }
+        .google-signin {
+            margin-top: 20px;
+            background: white;
+            color: #4285F4;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .google-signin:hover {
+            background: #e1e1e1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to My Cool Website</h1>
+        <button class="google-signin" onclick="googleSignIn()">Sign in with Google</button>
+        <button class="button" onclick="googleSignOut()">Sign out</button>
         <button class="button" onclick="goToHomepage()">Get Started</button>
     </div>
-
-    <script>
-        function goToHomepage() {
-            document.body.innerHTML = `
-                <div class='nav'>
-                    <a href='#' onclick='showGaming()'>Gaming</a>
-                    <a href='#' onclick='showAbout()'>About Me</a>
-                    <a href='#' onclick='showChat()'>Chat</a>
-                </div>
-                <div id='content' class='content'>
-                    <h1>Welcome to the Homepage</h1>
-                    <p>Edit the About Me section as needed.</p>
-                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
-                </div>
-            `;
-        }
-        function showGaming() {
-            document.getElementById('content').innerHTML = `
-                <h1>Gaming Section</h1>
-                <iframe src='https://chromedino.com/' width='800' height='400' style='border:none;'></iframe>
-            `;
-        }
-        function showAbout() {
-            document.getElementById('content').innerHTML = `
-                <h1>About Me</h1>
-                <p>This is the About Me section. You can edit this content as needed.</p>
-            `;
-        }
-        function showChat() {
-            document.getElementById('content').innerHTML = `
-                <h1>Chat Room</h1>
-                <div class='chat-container'>
-                    <div id='chatBox' class='chat-box'></div>
-                    <input type='text' id='messageInput' placeholder='Type a message...' />
-                    <button onclick='sendMessage()'>Send</button>
-                </div>
-            `;
-            loadMessages();
-        }
-    </script>
 </body>
 </html>
