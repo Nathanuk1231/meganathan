@@ -160,44 +160,180 @@
     </script>
 </body>
 </html>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cool Website</title>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-        authDomain: "coolwebsitechat.firebaseapp.com",
-        databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
-        projectId: "coolwebsitechat",
-        storageBucket: "coolwebsitechat.firebasestorage.app",
-        messagingSenderId: "341962893234",
-        appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
-    };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+            authDomain: "coolwebsitechat.firebaseapp.com",
+            databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+            projectId: "coolwebsitechat",
+            storageBucket: "coolwebsitechat.firebasestorage.app",
+            messagingSenderId: "341962893234",
+            appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-    function sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        if (messageInput.value.trim() === '') return;
-        push(ref(db, "messages"), { text: messageInput.value });
-        messageInput.value = '';
-    }
+        // Send Message
+        window.sendMessage = function () {
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput.value.trim() === '') return;
+            push(ref(db, "messages"), { text: messageInput.value });
+            messageInput.value = '';
+        };
 
-    function loadMessages() {
-        const chatBox = document.getElementById('chatBox');
-        onChildAdded(ref(db, "messages"), (snapshot) => {
-            const messageData = snapshot.val();
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            messageDiv.innerHTML = messageData.text + ` <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    }
+        // Load Messages
+        window.loadMessages = function () {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = ""; // Clear existing messages
 
-    function deleteMessage(messageId) {
-        remove(ref(db, "messages/" + messageId));
-        showChat();
-    }
-</script>
+            onChildAdded(ref(db, "messages"), (snapshot) => {
+                const messageData = snapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.innerHTML = `
+                    ${messageData.text} 
+                    <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>
+                `;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        };
+
+        // Delete Message
+        window.deleteMessage = function (messageId) {
+            remove(ref(db, "messages/" + messageId));
+        };
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #ff6600;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #ff4500;
+        }
+        .nav {
+            background: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .chat-box {
+            width: 80%;
+            max-width: 500px;
+            height: 300px;
+            border: 1px solid white;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #222;
+        }
+        .message {
+            background: #444;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .delete-button {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to My Cool Website</h1>
+        <button class="button" onclick="goToHomepage()">Get Started</button>
+    </div>
+
+    <script>
+        function goToHomepage() {
+            document.body.innerHTML = `
+                <div class='nav'>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
+                    <a href='#' onclick='showChat()'>Chat</a>
+                </div>
+                <div id='content' class='content'>
+                    <h1>Welcome to the Homepage</h1>
+                    <p>Edit the About Me section as needed.</p>
+                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
+                </div>
+            `;
+        }
+        function showGaming() {
+            document.getElementById('content').innerHTML = `
+                <h1>Gaming Section</h1>
+                <iframe src='https://chromedino.com/' width='800' height='400' style='border:none;'></iframe>
+            `;
+        }
+        function showAbout() {
+            document.getElementById('content').innerHTML = `
+                <h1>About Me</h1>
+                <p>This is the About Me section. You can edit this content as needed.</p>
+            `;
+        }
+        function showChat() {
+            document.getElementById('content').innerHTML = `
+                <h1>Chat Room</h1>
+                <div class='chat-container'>
+                    <div id='chatBox' class='chat-box'></div>
+                    <input type='text' id='messageInput' placeholder='Type a message...' />
+                    <button onclick='sendMessage()'>Send</button>
+                </div>
+            `;
+            loadMessages();
+        }
+    </script>
+</body>
+</html>
+
