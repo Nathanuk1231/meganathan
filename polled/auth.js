@@ -1,5 +1,5 @@
 
-const redirectUri = "https://nathanuk1231.github.io/meganathan/polled";
+const redirectUri = "https://nathanuk1231.github.io/meganathan/polled/timeline.html";
 const clientId = "9504be431db31b01c4c1738b6edff281"; 
 const clientSecret = "b84bff0ec7b6a9e83b36217faecd44722d2e172d8dc90547533ca08f0b542c4d";  
 
