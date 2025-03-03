@@ -36,7 +36,7 @@
         // do something with the data
     
         console.log(data);
-        document.getElementById("image").src = `https://levgames.nl/polled/api/v1/users/${data.user_url}/${data.user_image}`;
+        document.getElementById("image").src = `https://levgames.nl/polled/api/v1/users/${data.profile.user_url}/${data.profile.user_image}`;
         
         } else {
             console.error("Error:", data.error);
