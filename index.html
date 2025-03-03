@@ -7,7 +7,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
         // Firebase configuration
@@ -50,17 +50,23 @@
             });
         };
 
-        // Get user name from localStorage or prompt for it
-        let userName = localStorage.getItem("userName");
-        if (!userName) {
-            // If no user name in localStorage, prompt for sign-in
-            window.googleSignIn();
-        }
+        // Listen for auth state changes and set up user name
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                localStorage.setItem("userName", user.displayName);
+                loadMessages(); // Load messages after the user is signed in
+            } else {
+                // No user is signed in
+                localStorage.removeItem("userName");
+            }
+        });
 
         // Send Message
         window.sendMessage = function () {
             const messageInput = document.getElementById('messageInput');
             if (messageInput.value.trim() === '') return;
+            const userName = localStorage.getItem("userName");
             push(ref(db, "messages"), { name: userName, text: messageInput.value });
             messageInput.value = '';
         };
@@ -78,7 +84,7 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 messageDiv.id = `msg-${snapshot.key}`;
-                messageDiv.innerHTML = `
+                messageDiv.innerHTML = ` 
                     <strong>${messageData.name}:</strong> ${messageData.text}
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>
                 `;
