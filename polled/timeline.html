@@ -24,7 +24,7 @@
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("accessToken"),
         }
-    })n
+    })
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok, status: ' + response.status);
