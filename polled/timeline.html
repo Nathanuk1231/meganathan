@@ -22,7 +22,7 @@
 
   
     <img id="image" src="https://levgames.nl/polled/api/v1/users/user/user.svg">
-
+    <h2 id="name">You are not logged in! Pleawse lowg in <a href="login.html">hewre</a>, pwease :)</h2>
                                         
         
     <script>
@@ -46,7 +46,7 @@
     
         console.log(data);
         document.getElementById("image").src = `https://levgames.nl/polled/api/v1/users/${data.profile.user_url}/${data.profile.image}`;
-        
+        document.getElementById("name").textContent = `Hello ${data.profile.username}`;
         } else {
             console.error("Error:", data.error);
         }
