@@ -4,11 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timeline</title>
+    <script src="auth.js"></script>
   </head>
   <body>
     <main>
         <h1>Welcome to My Website</h1>  
     </main>
-    <script src="auth.js"></script>
+
+    <script>
+
+  
+    fetch("https://levgames.nl/polled/api/v1/profile", { // url parameter is only needed when you want to specify a user
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("accessToken"),
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok, status: ' + response.status);
+        }
+        return response.json();  // Parse JSON if the response is OK
+    })
+    .then(data => {
+        if (data.status === "success") {
+        // do something with the data
+    
+        console.log(data);
+        } else {
+            console.error("Error:", data.error);
+        }
+    })
+    .catch(error => {
+        console.error("Request failed", error);
+    });
+                                    
+      
+    </script>
   </body>
 </html>
