@@ -11,6 +11,11 @@
         <h1>Welcome to My Website</h1>  
     </main>
 
+  
+    <img id="image" src="https://levgames.nl/polled/api/v1/users/user/user.svg">
+
+                                        
+        
     <script>
 
   
@@ -19,7 +24,7 @@
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("accessToken"),
         }
-    })
+    })n
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok, status: ' + response.status);
@@ -31,6 +36,8 @@
         // do something with the data
     
         console.log(data);
+        document.getElementById("image").src = `https://levgames.nl/polled/api/v1/users/${data.user_url}/${data.user_image}`;
+        
         } else {
             console.error("Error:", data.error);
         }
