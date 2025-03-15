@@ -64,8 +64,7 @@
                 throw new Error("Error: " + data.error + "\n" + data.message);
             }
             else {
-                // Success, do something with JSON data
-                console.log(data);
+                const body = document.body;
                 body.innerHTML += `
                     <div class="Timeline">
                         <p>Here is the timeline <br></p>
