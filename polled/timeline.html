@@ -68,7 +68,7 @@
                 body.innerHTML += `
                     <div class="Timeline">
                         <p>Here is the timeline <br></p>
-                        ${data.timeline}
+                        ${JSON.stringify(data.timeline, null, 2)}
                     </div>
                 `; 
             }
