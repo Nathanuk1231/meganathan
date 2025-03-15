@@ -209,6 +209,13 @@
         function goToHomepage() {
             document.body.innerHTML = `
 
+                <div class='nav'>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
+                    <a href='#' onclick='showChat()'>Chat</a>
+                    <a href='polled/timeline'>Polled</a>
+                </div>
+
                 <div id='content' class='content'>
                     <h1>Welcome to the Homepage</h1>
                     <p>Edit the About Me section as needed.</p>
