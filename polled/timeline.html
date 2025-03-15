@@ -66,6 +66,12 @@
             else {
                 // Success, do something with JSON data
                 console.log(data);
+                body.innerHTML += `
+                    <div class="Timeline">
+                        <p>Here is the timeline <br></p>
+                        ${data.timeline}
+                    </div>
+                `; 
             }
         });
                                             
