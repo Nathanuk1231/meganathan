@@ -16,7 +16,7 @@ if (code) {
     formData.append("client_secret", clientSecret);  
 
     // Send a POST request to authorization_code.php
-    fetch('https://levgames.nl/polled/api/v1/authorization_code', {
+    fetch('https://wokki20.nl/polled/api/v1/authorization_code', {
         method: 'POST',
         body: formData
     })
