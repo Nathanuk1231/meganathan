@@ -28,7 +28,7 @@
     <script>
 
   
-    fetch("https://levgames.nl/polled/api/v1/profile", { // url parameter is only needed when you want to specify a user
+    fetch("https://wokki20.nl/polled/api/v1/profile", { // url parameter is only needed when you want to specify a user
         method: "GET",
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("accessToken"),
@@ -45,11 +45,11 @@
         // do something with the data
     
         console.log(data);
-        document.getElementById("image").src = `https://levgames.nl/polled/api/v1/users/${data.profile.user_url}/${data.profile.image}`;
+        document.getElementById("image").src = `https://wokki20.nl/polled/api/v1/users/${data.profile.user_url}/${data.profile.image}`;
         document.getElementById("name").textContent = `Hello ${data.profile.username}`;
 
   
-        fetch("https://levgames.nl/polled/api/v1/timeline?limit=10&offset=0", { 
+        fetch("https://wokki20.nl/polled/api/v1/timeline?limit=10&offset=0", { 
             method: "GET",
             headers: {
                 "Authorization": "Bearer " + localStorage.getItem("accessToken"),
