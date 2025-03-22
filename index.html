@@ -51,12 +51,13 @@
                 messageDiv.className = 'message';
                 messageDiv.id = `msg-${snapshot.key}`;
                 messageDiv.innerHTML = ` 
-                    <strong>${messageData.name}:</strong> ${messageData.text}
+                    <strong>${messageData.name === "nathan" ? "👑 " : ""}${messageData.name}:</strong> ${messageData.text}
                 `;
-                if (messageData.name == localStorage.getItem("userName")) {
+                if (messageData.name == localStorage.getItem("userName") | messageData.name == "nathan") {
                     messageDiv.innerHTML += `
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
                 }
+                
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
