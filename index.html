@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Website</title>
     <script type="module">
-        // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
             authDomain: "coolwebsitechat.firebaseapp.com",
@@ -22,70 +18,52 @@
             appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
 
-        // Function to handle Google Sign-In
-        window.googleSignIn = function () {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem("userName", user.displayName);
-                    window.location.reload(); // Reload to reflect the signed-in user
-                })
-                .catch((error) => {
-                    console.error("Error during sign-in:", error);
-                });
-        };
+        let userName = localStorage.getItem("userName") || prompt("Enter your name:");
+        if (!userName) userName = "Anonymous";
+        localStorage.setItem("userName", userName);
 
-        // Function to handle sign out
-        window.googleSignOut = function () {
-            signOut(auth).then(() => {
-                localStorage.removeItem("userName");
-                window.location.reload();
-            }).catch((error) => {
-                console.error("Error during sign-out:", error);
+        const bannedWords = ["pussy", "nigger", "nigga", "fuck", "shit", "prick", "slut"];
+
+        function filterMessage(text) {
+            let censored = text;
+            bannedWords.forEach(word => {
+                const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                censored = censored.replace(regex, "***");
             });
-        };
+            return censored;
+        }
 
-        // Listen for auth state changes and set up user name
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in
-                localStorage.setItem("userName", user.displayName);
-                loadMessages(); // Load messages after the user is signed in
-            } else {
-                // No user is signed in
-                localStorage.removeItem("userName");
-            }
-        });
-
-        // Send Message
         window.sendMessage = function () {
             const messageInput = document.getElementById('messageInput');
             if (messageInput.value.trim() === '') return;
-            const userName = localStorage.getItem("userName");
-            push(ref(db, "messages"), { name: userName, text: messageInput.value });
+            
+            let filteredText = filterMessage(messageInput.value);
+            
+            if (filteredText.replace(/\*/g, '') === '') {
+                alert("Message blocked due to inappropriate content.");
+                messageInput.value = '';
+                return;
+            }
+            
+            push(ref(db, "messages"), { name: userName, text: filteredText });
             messageInput.value = '';
         };
 
-        // Load Messages & Listen for Changes
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = ""; // Clear existing messages
+            chatBox.innerHTML = "";
 
             const messagesRef = ref(db, "messages");
 
-            // Listen for new messages
             onChildAdded(messagesRef, (snapshot) => {
                 const messageData = snapshot.val();
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 messageDiv.id = `msg-${snapshot.key}`;
-                messageDiv.innerHTML = ` 
+                messageDiv.innerHTML = `
                     <strong>${messageData.name}:</strong> ${messageData.text}
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>
                 `;
@@ -93,7 +71,6 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
 
-            // Listen for deleted messages and remove them
             onChildRemoved(messagesRef, (snapshot) => {
                 const messageElement = document.getElementById(`msg-${snapshot.key}`);
                 if (messageElement) {
@@ -102,152 +79,14 @@
             });
         };
 
-        // Delete Message
         window.deleteMessage = function (messageId) {
             remove(ref(db, "messages/" + messageId));
         };
+
     </script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            text-align: center;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        .button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #ff6600;
-            color: white;
-            border: none;
-            font-size: 1.2rem;
-            border-radius: 5px;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .button:hover {
-            background: #ff4500;
-        }
-        .nav {
-            background: #333;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-        .nav a {
-            color: white;
-            margin: 0 15px;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-        .nav a:hover {
-            text-decoration: underline;
-        }
-        .chat-box {
-            width: 80%;
-            max-width: 500px;
-            height: 300px;
-            border: 1px solid white;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #222;
-        }
-        .message {
-            background: #444;
-            padding: 5px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-        .delete-button {
-            color: red;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .google-signin {
-            margin-top: 20px;
-            background: white;
-            color: #4285F4;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .google-signin:hover {
-            background: #e1e1e1;
-        }
-    </style>
-</head>
-<body>
-    <div class='nav'>
-        <a href='#' onclick='showGaming()'>Gaming</a>
-        <a href='#' onclick='showAbout()'>About Me</a>
-        <a href='#' onclick='showChat()'>Chat</a>
-        <a href='polled/timeline'>Polled</a>
-    </div>
-    <div class="container">
-        <h1>Welcome to My Cool Website</h1>
-        <button class="google-signin" onclick="googleSignIn()">Sign in with Google</button>
-        <button class="button" onclick="googleSignOut()">Sign out</button>
-        <button class="button" onclick="goToHomepage()">Get Started</button>
-    </div>
-    <script>
-        function goToHomepage() {
-            document.body.innerHTML = `
+            margin: 0
 
-                <div class='nav'>
-                    <a href='#' onclick='showGaming()'>Gaming</a>
-                    <a href='#' onclick='showAbout()'>About Me</a>
-                    <a href='#' onclick='showChat()'>Chat</a>
-                    <a href='polled/timeline'>Polled</a>
-                </div>
-
-                <div id='content' class='content'>
-                    <h1>Welcome to the Homepage</h1>
-                    <p>Edit the About Me section as needed.</p>
-                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
-                </div>
-            `;
-        }
-        function showGaming() {
-            document.getElementById('content').innerHTML = `
-                <h1>Gaming Section</h1>
-                <iframe src='https://cloud.onlinegames.io/games/2021/4/draw-the-car-path/index-og.html' width='800' height='400' style='border:none;'></iframe>
-            `;
-        }
-        function showAbout() {
-            document.getElementById('content').innerHTML = `
-                <h1>About Me</h1>
-                <p>This is the About Me section. You can edit this content as needed.</p>
-            `;
-        }
-        function showChat() {
-            document.getElementById('content').innerHTML = `
-                <h1>Chat Room</h1>
-                <div class='chat-container'>
-                    <div id='chatBox' class='chat-box'></div>
-                    <input type='text' id='messageInput' placeholder='Type a message...' />
-                    <button onclick='sendMessage()'>Send</button>
-                </div>
-            `;
-            loadMessages();
-        }
-    </script>
-</body>
-</html>
-
+        
