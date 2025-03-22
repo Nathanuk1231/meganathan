@@ -68,16 +68,16 @@
         };
 
         window.selectUsername = function() {
-            const username = localStorage.getItem("userName");
-            if (username = undefined | username != null | !username) {
-                // user has no username
-                let newUsername = prompt("What's would you like to be called?");
-                localStorage.setItem("userName", newUsername);
-
-            } else {
-                // user already has username
+            let username = localStorage.getItem("userName");
+            if (username === null || username === undefined || username === "") {
+                // User has no username
+                let newUsername = prompt("What would you like to be called?");
+                if (newUsername) { 
+                    localStorage.setItem("userName", newUsername);
+                }
             }
-        }
+        };
+
         
         // Delete Message
         window.deleteMessage = function (messageId) {
