@@ -201,7 +201,7 @@
         <a href='#chat' onclick='showChat()'>Chat</a>
         <a href='polled/timeline'>Polled</a>
     </div>
-    <div class="content">
+    <div class="content" id="content">
         <h1>Welcome to My Cool Website</h1>
         <button class="google-signin" onclick="googleSignIn()">Sign in with Google</button>
         <button class="button" onclick="googleSignOut()">Sign out</button>
@@ -254,6 +254,21 @@
                     sendMessage();
                 }
             });
+        }
+
+        window.addEventListener('load', checkHash);
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', checkHash);
+        
+        function checkHash() {
+            if (window.location.hash === '#chat') {
+                showChat();
+            } else if (window.location.hash === '#gaming') {
+                showGaming();
+            } else if (window.location.hash === '#about') {
+                showAbout();
+            }
         }
 
     </script>
