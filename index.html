@@ -37,31 +37,44 @@
             messageInput.value = '';
         };
 
+        // Function to escape HTML
+        function escapeHTML(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         // Load Messages & Listen for Changes
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = ""; // Clear existing messages
-
+        
             const messagesRef = ref(db, "messages");
-
+        
             // Listen for new messages
             onChildAdded(messagesRef, (snapshot) => {
                 const messageData = snapshot.val();
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'message';
                 messageDiv.id = `msg-${snapshot.key}`;
+        
+                // Escape user-generated text
+                const escapedName = escapeHTML(messageData.name);
+                const escapedText = escapeHTML(messageData.text);
+        
                 messageDiv.innerHTML = ` 
-                    <strong>${messageData.name === "nathan" ? "👑 " : ""}${messageData.name}:</strong> ${messageData.text}
+                    <strong>${escapedName === "nathan" ? "👑 " : ""}${escapedName}:</strong> ${escapedText}
                 `;
-                if (messageData.name == localStorage.getItem("userName") | localStorage.getItem("userName") == "nathan") {
+        
+                if (messageData.name == localStorage.getItem("userName") || localStorage.getItem("userName") == "nathan") {
                     messageDiv.innerHTML += `
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
                 }
-                
+        
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
-
+        
             // Listen for deleted messages and remove them
             onChildRemoved(messagesRef, (snapshot) => {
                 const messageElement = document.getElementById(`msg-${snapshot.key}`);
@@ -70,6 +83,7 @@
                 }
             });
         };
+
 
         window.selectUsername = function() {
             let username = localStorage.getItem("userName");
