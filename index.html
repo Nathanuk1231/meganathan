@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Website</title>
     <script type="module">
-        // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
             authDomain: "coolwebsitechat.firebaseapp.com",
@@ -21,47 +19,27 @@
             appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // Function to filter inappropriate words
-        function filterMessage(message) {
-            const badWords = ["pussy", "nigger", "nigga", "fuck", "shit", "prick", "slut"];
-            let filteredMessage = message;
-            badWords.forEach(word => {
-                const regex = new RegExp(word, "gi");
-                filteredMessage = filteredMessage.replace(regex, "***");
-            });
-            return filteredMessage;
-        }
-
-        // Function to handle Google Sign-In
         window.googleSignIn = function () {
             signInWithPopup(auth, provider)
                 .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem("userName", user.displayName);
+                    localStorage.setItem("userName", result.user.displayName);
                     window.location.reload();
                 })
-                .catch((error) => {
-                    console.error("Error during sign-in:", error);
-                });
+                .catch((error) => console.error("Error during sign-in:", error));
         };
 
-        // Function to handle sign out
         window.googleSignOut = function () {
             signOut(auth).then(() => {
                 localStorage.removeItem("userName");
                 window.location.reload();
-            }).catch((error) => {
-                console.error("Error during sign-out:", error);
-            });
+            }).catch((error) => console.error("Error during sign-out:", error));
         };
 
-        // Listen for auth state changes and set up user name
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem("userName", user.displayName);
@@ -71,17 +49,23 @@
             }
         });
 
-        // Send Message
+        const badWords = ["fuck", "shit", "prick", "slut", "pussy", "nigger", "nigga"];
+
         window.sendMessage = function () {
             const messageInput = document.getElementById('messageInput');
-            if (messageInput.value.trim() === '') return;
-            const userName = localStorage.getItem("userName");
-            const cleanMessage = filterMessage(messageInput.value);
-            push(ref(db, "messages"), { name: userName, text: cleanMessage });
+            let messageText = messageInput.value.trim();
+            if (messageText === '') return;
+            
+            badWords.forEach(word => {
+                let regex = new RegExp(`\\b${word}\\b`, 'gi');
+                messageText = messageText.replace(regex, "***");
+            });
+
+            const userName = localStorage.getItem("userName") || "Anonymous";
+            push(ref(db, "messages"), { name: userName, text: messageText });
             messageInput.value = '';
         };
 
-        // Load Messages & Listen for Changes
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = "";
@@ -102,13 +86,10 @@
 
             onChildRemoved(messagesRef, (snapshot) => {
                 const messageElement = document.getElementById(`msg-${snapshot.key}`);
-                if (messageElement) {
-                    messageElement.remove();
-                }
+                if (messageElement) messageElement.remove();
             });
         };
 
-        // Delete Message
         window.deleteMessage = function (messageId) {
             remove(ref(db, "messages/" + messageId));
         };
@@ -118,7 +99,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
+            background: linear-gradient(135deg, #1e3c72, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
             background-size: 400% 400%;
             animation: rainbowFade 10s infinite alternate;
             color: white;
@@ -136,6 +117,14 @@
         <a href='#' onclick='showGaming()'>Gaming</a>
         <a href='#' onclick='showAbout()'>About Me</a>
         <a href='#' onclick='showChat()'>Chat</a>
+        <a href='polled/timeline'>Polled</a>
+    </div>
+    <div class="container">
+        <h1>Welcome to My Cool Website</h1>
+        <button class="google-signin" onclick="googleSignIn()">Sign in with Google</button>
+        <button class="button" onclick="googleSignOut()">Sign out</button>
+        <button class="button" onclick="goToHomepage()">Get Started</button>
     </div>
 </body>
 </html>
+
