@@ -53,7 +53,7 @@
                 messageDiv.innerHTML = ` 
                     <strong>${messageData.name === "nathan" ? "👑 " : ""}${messageData.name}:</strong> ${messageData.text}
                 `;
-                if (messageData.name == localStorage.getItem("userName") | messageData.name == "nathan") {
+                if (messageData.name == localStorage.getItem("userName") | localStorage.getItem("userName") == "nathan") {
                     messageDiv.innerHTML += `
                     <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
                 }
