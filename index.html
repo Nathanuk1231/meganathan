@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +9,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -17,7 +17,7 @@
             authDomain: "coolwebsitechat.firebaseapp.com",
             databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
             projectId: "coolwebsitechat",
-            storageBucket: "coolwebsitechat.firebasestorage.app",
+            storageBucket: "coolwebsitechat.appspot.com",
             messagingSenderId: "341962893234",
             appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
         };
@@ -26,80 +26,60 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
 
-        // Send Message
+        window.googleSignIn = function () {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    localStorage.setItem("userName", result.user.displayName);
+                    window.location.reload();
+                })
+                .catch((error) => console.error("Sign-in error:", error));
+        };
+
+        window.googleSignOut = function () {
+            signOut(auth).then(() => {
+                localStorage.removeItem("userName");
+                window.location.reload();
+            }).catch(error => console.error("Sign-out error:", error));
+        };
+
         window.sendMessage = function () {
             const messageInput = document.getElementById('messageInput');
             if (messageInput.value.trim() === '') return;
-            const userName = localStorage.getItem("userName");
-            push(ref(db, "messages"), { name: userName, text: messageInput.value });
+            push(ref(db, "messages"), { name: localStorage.getItem("userName"), text: messageInput.value });
             messageInput.value = '';
         };
 
-        // Function to escape HTML
-        function escapeHTML(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Load Messages & Listen for Changes
+        window.uploadImage = function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const storageReference = storageRef(storage, 'chatImages/' + file.name);
+            uploadBytes(storageReference, file).then(snapshot => {
+                return getDownloadURL(snapshot.ref);
+            }).then(url => {
+                push(ref(db, "messages"), { name: localStorage.getItem("userName"), imageUrl: url });
+            });
+        };
+
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = ""; // Clear existing messages
-        
-            const messagesRef = ref(db, "messages");
-        
-            // Listen for new messages
-            onChildAdded(messagesRef, (snapshot) => {
-                const messageData = snapshot.val();
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                messageDiv.id = `msg-${snapshot.key}`;
-        
-                // Escape user-generated text
-                const escapedName = escapeHTML(messageData.name);
-                const escapedText = escapeHTML(messageData.text);
-        
-                messageDiv.innerHTML = ` 
-                    <strong>${escapedName === "nathan" ? "👑 " : ""}${escapedName}:</strong> ${escapedText}
-                `;
-        
-                if (messageData.name == localStorage.getItem("userName") || localStorage.getItem("userName") == "nathan") {
-                    messageDiv.innerHTML += `
-                    <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
-                }
-        
-                chatBox.appendChild(messageDiv);
+            chatBox.innerHTML = "";
+            onChildAdded(ref(db, "messages"), snapshot => {
+                const msgData = snapshot.val();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message';
+                msgDiv.innerHTML = `<strong>${msgData.name}:</strong> ` +
+                    (msgData.text ? msgData.text : '') +
+                    (msgData.imageUrl ? `<br><img src="${msgData.imageUrl}" width="200">` : '') +
+                    ` <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
+                chatBox.appendChild(msgDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
-        
-            // Listen for deleted messages and remove them
-            onChildRemoved(messagesRef, (snapshot) => {
-                const messageElement = document.getElementById(`msg-${snapshot.key}`);
-                if (messageElement) {
-                    messageElement.remove();
-                }
-            });
         };
 
-
-        window.selectUsername = function() {
-            let username = localStorage.getItem("userName");
-            if (username === null || username === undefined || username === "") {
-                // User has no username
-                let newUsername = prompt("What would you like to be called?");
-                if (newUsername) { 
-                    localStorage.setItem("userName", newUsername);
-                }
-            }
-        };
-
-        
-        // Delete Message
         window.deleteMessage = function (messageId) {
-            
             remove(ref(db, "messages/" + messageId));
         };
     </script>
@@ -108,166 +88,48 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
+            background-size: 400% 400%;
+            animation: rainbow 10s infinite linear;
             color: white;
             text-align: center;
         }
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        .button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #ff6600;
-            color: white;
-            border: none;
-            font-size: 1.2rem;
-            border-radius: 5px;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .button:hover {
-            background: #ff4500;
-        }
-        .nav {
-            background: #333;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-        .nav a {
-            color: white;
-            margin: 0 15px;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-        .nav a:hover {
-            text-decoration: underline;
-        }
-        .chat-box {
-            width: 80%;
-            max-width: 500px;
-            height: 300px;
-            margin: auto;
-            border: 1px solid white;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #222;
-        }
-        .message {
-            background: #444;
-            padding: 5px;
-            margin: 5px 0;
-            border-radius: 5px;
-            word-wrap: break-word;
-        }
-        .delete-button {
-            color: red;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .google-signin {
-            margin-top: 20px;
-            background: white;
-            color: #4285F4;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .google-signin:hover {
-            background: #e1e1e1;
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
         }
     </style>
 </head>
 <body>
     <div class='nav'>
-        <a href='#gaming' onclick='showGaming()'>Gaming</a>
-        <a href='#about' onclick='showAbout()'>About Me</a>
-        <a href='#chat' onclick='showChat()'>Chat</a>
-        <a href='polled/timeline'>Polled</a>
+        <a href='#' onclick='showGaming()'>Gaming</a>
+        <a href='#' onclick='showAbout()'>About Me</a>
+        <a href='#' onclick='showChat()'>Chat</a>
     </div>
-    <div class="content" id="content">
+    <div class="container">
         <h1>Welcome to My Cool Website</h1>
-        <button class="button" onclick="goToHomepage()">Get Started</button>
+        <button onclick="googleSignIn()">Sign in with Google</button>
+        <button onclick="googleSignOut()">Sign out</button>
+        <button onclick="goToHomepage()">Get Started</button>
     </div>
     <script>
-        function goToHomepage() {
-            document.body.innerHTML = `
-
-                <div class='nav'>
-                    <a href='#gaming' onclick='showGaming()'>Gaming</a>
-                    <a href='#about' onclick='showAbout()'>About Me</a>
-                    <a href='#chat' onclick='showChat()'>Chat</a>
-                    <a href='polled/timeline'>Polled</a>
-                </div>
-
-                <div id='content' class='content'>
-                    <h1>Welcome to the Homepage</h1>
-                    <p>Edit the About Me section as needed.</p>
-                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
-                </div>
-            `;
-        }
-        function showGaming() {
-            document.getElementById('content').innerHTML = `
-                <h1>Gaming Section</h1>
-                <iframe src='https://cloud.onlinegames.io/games/2021/4/draw-the-car-path/index-og.html' width='800' height='400' style='border:none;'></iframe>
-            `;
-        }
-        function showAbout() {
-            document.getElementById('content').innerHTML = `
-                <h1>About Me</h1>
-                <p>This is the About Me section. You can edit this content as needed.</p>
-            `;
-        }
         function showChat() {
-            document.getElementById('content').innerHTML = `
+            document.body.innerHTML = `
+                <div class='nav'>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
+                    <a href='#' onclick='showChat()'>Chat</a>
+                </div>
                 <h1>Chat Room</h1>
                 <div class='chat-container'>
                     <div id='chatBox' class='chat-box'></div>
-                    <input type='text' id='messageInput' placeholder='Type a message...' />
+                    <input type='text' id='messageInput' placeholder='Type a message...'/>
                     <button onclick='sendMessage()'>Send</button>
+                    <input type='file' id='imageInput' accept='image/*' onchange='uploadImage(event)' />
                 </div>
             `;
             loadMessages();
-            selectUsername();
-
-            
-            // Attach event listener to input field
-            document.getElementById('messageInput').addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') {
-                    sendMessage();
-                }
-            });
         }
-
-        window.addEventListener('load', checkHash);
-
-        // Listen for hash changes
-        window.addEventListener('hashchange', checkHash);
-        
-        function checkHash() {
-            if (window.location.hash === '#chat') {
-                showChat();
-            } else if (window.location.hash === '#gaming') {
-                showGaming();
-            } else if (window.location.hash === '#about') {
-                showAbout();
-            }
-        }
-
     </script>
 </body>
 </html>
