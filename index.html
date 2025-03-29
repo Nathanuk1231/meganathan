@@ -4,115 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Website</title>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-            authDomain: "coolwebsitechat.firebaseapp.com",
-            databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
-            projectId: "coolwebsitechat",
-            storageBucket: "coolwebsitechat.appspot.com",
-            messagingSenderId: "341962893234",
-            appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
-        const storage = getStorage(app);
-        const provider = new GoogleAuthProvider();
-
-        window.googleSignIn = function () {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    localStorage.setItem("userName", result.user.displayName);
-                    window.location.reload();
-                })
-                .catch(console.error);
-        };
-
-        window.googleSignOut = function () {
-            signOut(auth).then(() => {
-                localStorage.removeItem("userName");
-                window.location.reload();
-            }).catch(console.error);
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                localStorage.setItem("userName", user.displayName);
-                loadMessages();
-            } else {
-                localStorage.removeItem("userName");
-            }
-        });
-
-        window.sendMessage = function () {
-            const messageInput = document.getElementById('messageInput');
-            if (!messageInput.value.trim()) return;
-            push(ref(db, "messages"), { name: localStorage.getItem("userName"), text: messageInput.value });
-            messageInput.value = '';
-        };
-
-        window.uploadImage = function () {
-            const fileInput = document.getElementById('imageInput');
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const imgRef = storageRef(storage, 'images/' + file.name);
-            uploadBytes(imgRef, file).then(snapshot => {
-                getDownloadURL(snapshot.ref).then(url => {
-                    push(ref(db, "messages"), { name: localStorage.getItem("userName"), imageUrl: url });
-                });
-            });
-        };
-
-        window.loadMessages = function () {
-            const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = "";
-
-            onChildAdded(ref(db, "messages"), (snapshot) => {
-                const messageData = snapshot.val();
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                messageDiv.id = `msg-${snapshot.key}`;
-                messageDiv.innerHTML = `<strong>${messageData.name}:</strong> ${messageData.text || ''}`;
-                if (messageData.imageUrl) {
-                    messageDiv.innerHTML += `<br><img src='${messageData.imageUrl}' width='200' />`;
-                }
-                messageDiv.innerHTML += `<span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
-                chatBox.appendChild(messageDiv);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-
-            onChildRemoved(ref(db, "messages"), (snapshot) => {
-                document.getElementById(`msg-${snapshot.key}`)?.remove();
-            });
-        };
-
-        window.deleteMessage = function (messageId) {
-            remove(ref(db, "messages/" + messageId));
-        };
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
             text-align: center;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         .container {
             display: flex;
@@ -120,6 +21,39 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #ff6600;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #ff4500;
+        }
+        .nav {
+            background: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .nav a:hover {
+            text-decoration: underline;
         }
         .chat-box {
             width: 80%;
@@ -131,18 +65,67 @@
             padding: 10px;
             background: #222;
         }
+        .message {
+            background: #444;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .delete-button {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
-    <div class='container'>
-        <h1>Cool Chat</h1>
-        <button onclick="googleSignIn()">Sign in with Google</button>
-        <button onclick="googleSignOut()">Sign out</button>
-        <div class='chat-box' id='chatBox'></div>
-        <input type='text' id='messageInput' placeholder='Type a message...'>
-        <button onclick='sendMessage()'>Send</button>
-        <input type='file' id='imageInput'>
-        <button onclick='uploadImage()'>Upload Image</button>
+    <div class='nav'>
+        <a href='#' onclick='showGaming()'>Gaming</a>
+        <a href='#' onclick='showAbout()'>About Me</a>
+        <a href='#' onclick='showChat()'>Chat</a>
     </div>
+    <div class="container">
+        <h1>Welcome to My Cool Website</h1>
+        <button class="button" onclick="goToHomepage()">Get Started</button>
+    </div>
+    <script>
+        function goToHomepage() {
+            document.body.innerHTML = `
+                <div class='nav'>
+                    <a href='#' onclick='showGaming()'>Gaming</a>
+                    <a href='#' onclick='showAbout()'>About Me</a>
+                    <a href='#' onclick='showChat()'>Chat</a>
+                </div>
+                <div id='content' class='content'>
+                    <h1>Welcome to the Homepage</h1>
+                    <p>Edit the About Me section as needed.</p>
+                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
+                </div>
+            `;
+        }
+        function showGaming() {
+            document.getElementById('content').innerHTML = `
+                <h1>Gaming Section</h1>
+                <iframe src='https://chromedino.com/' width='800' height='400' style='border:none;'></iframe>
+            `;
+        }
+        function showAbout() {
+            document.getElementById('content').innerHTML = `
+                <h1>About Me</h1>
+                <p>This is the About Me section. You can edit this content as needed.</p>
+            `;
+        }
+        function showChat() {
+            document.getElementById('content').innerHTML = `
+                <h1>Chat Room</h1>
+                <div class='chat-container'>
+                    <div id='chatBox' class='chat-box'></div>
+                    <input type='text' id='messageInput' placeholder='Type a message...' />
+                    <button onclick='sendMessage()'>Send</button>
+                </div>
+            `;
+            loadMessages();
+        }
+    </script>
 </body>
 </html>
