@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cool Website</title>
     <script type="module">
-        // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
         import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
             authDomain: "coolwebsitechat.firebaseapp.com",
@@ -22,7 +20,6 @@
             appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
@@ -35,47 +32,65 @@
                     localStorage.setItem("userName", result.user.displayName);
                     window.location.reload();
                 })
-                .catch((error) => console.error("Sign-in error:", error));
+                .catch(console.error);
         };
 
         window.googleSignOut = function () {
             signOut(auth).then(() => {
                 localStorage.removeItem("userName");
                 window.location.reload();
-            }).catch(error => console.error("Sign-out error:", error));
+            }).catch(console.error);
         };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem("userName", user.displayName);
+                loadMessages();
+            } else {
+                localStorage.removeItem("userName");
+            }
+        });
 
         window.sendMessage = function () {
             const messageInput = document.getElementById('messageInput');
-            if (messageInput.value.trim() === '') return;
+            if (!messageInput.value.trim()) return;
             push(ref(db, "messages"), { name: localStorage.getItem("userName"), text: messageInput.value });
             messageInput.value = '';
         };
 
-        window.uploadImage = function (event) {
-            const file = event.target.files[0];
+        window.uploadImage = function () {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
             if (!file) return;
-            const storageReference = storageRef(storage, 'chatImages/' + file.name);
-            uploadBytes(storageReference, file).then(snapshot => {
-                return getDownloadURL(snapshot.ref);
-            }).then(url => {
-                push(ref(db, "messages"), { name: localStorage.getItem("userName"), imageUrl: url });
+
+            const imgRef = storageRef(storage, 'images/' + file.name);
+            uploadBytes(imgRef, file).then(snapshot => {
+                getDownloadURL(snapshot.ref).then(url => {
+                    push(ref(db, "messages"), { name: localStorage.getItem("userName"), imageUrl: url });
+                });
             });
         };
 
         window.loadMessages = function () {
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = "";
-            onChildAdded(ref(db, "messages"), snapshot => {
-                const msgData = snapshot.val();
-                const msgDiv = document.createElement('div');
-                msgDiv.className = 'message';
-                msgDiv.innerHTML = `<strong>${msgData.name}:</strong> ` +
-                    (msgData.text ? msgData.text : '') +
-                    (msgData.imageUrl ? `<br><img src="${msgData.imageUrl}" width="200">` : '') +
-                    ` <span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
-                chatBox.appendChild(msgDiv);
+
+            onChildAdded(ref(db, "messages"), (snapshot) => {
+                const messageData = snapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.id = `msg-${snapshot.key}`;
+                messageDiv.innerHTML = `<strong>${messageData.name}:</strong> ${messageData.text || ''}`;
+                if (messageData.imageUrl) {
+                    messageDiv.innerHTML += `<br><img src='${messageData.imageUrl}' width='200' />`;
+                }
+                messageDiv.innerHTML += `<span class='delete-button' onclick='deleteMessage("${snapshot.key}")'>❌</span>`;
+                chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            onChildRemoved(ref(db, "messages"), (snapshot) => {
+                document.getElementById(`msg-${snapshot.key}`)?.remove();
             });
         };
 
@@ -90,46 +105,44 @@
             padding: 0;
             background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet);
             background-size: 400% 400%;
-            animation: rainbow 10s infinite linear;
+            animation: gradientBG 10s ease infinite;
             color: white;
             text-align: center;
         }
-        @keyframes rainbow {
+        @keyframes gradientBG {
             0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-box {
+            width: 80%;
+            max-width: 500px;
+            height: 300px;
+            border: 1px solid white;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #222;
         }
     </style>
 </head>
 <body>
-    <div class='nav'>
-        <a href='#' onclick='showGaming()'>Gaming</a>
-        <a href='#' onclick='showAbout()'>About Me</a>
-        <a href='#' onclick='showChat()'>Chat</a>
-    </div>
-    <div class="container">
-        <h1>Welcome to My Cool Website</h1>
+    <div class='container'>
+        <h1>Cool Chat</h1>
         <button onclick="googleSignIn()">Sign in with Google</button>
         <button onclick="googleSignOut()">Sign out</button>
-        <button onclick="goToHomepage()">Get Started</button>
+        <div class='chat-box' id='chatBox'></div>
+        <input type='text' id='messageInput' placeholder='Type a message...'>
+        <button onclick='sendMessage()'>Send</button>
+        <input type='file' id='imageInput'>
+        <button onclick='uploadImage()'>Upload Image</button>
     </div>
-    <script>
-        function showChat() {
-            document.body.innerHTML = `
-                <div class='nav'>
-                    <a href='#' onclick='showGaming()'>Gaming</a>
-                    <a href='#' onclick='showAbout()'>About Me</a>
-                    <a href='#' onclick='showChat()'>Chat</a>
-                </div>
-                <h1>Chat Room</h1>
-                <div class='chat-container'>
-                    <div id='chatBox' class='chat-box'></div>
-                    <input type='text' id='messageInput' placeholder='Type a message...'/>
-                    <button onclick='sendMessage()'>Send</button>
-                    <input type='file' id='imageInput' accept='image/*' onchange='uploadImage(event)' />
-                </div>
-            `;
-            loadMessages();
-        }
-    </script>
 </body>
 </html>
