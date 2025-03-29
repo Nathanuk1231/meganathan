@@ -6,6 +6,7 @@
     <title>Cool Website</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,21 +41,6 @@
         .button:hover {
             background: #ff4500;
         }
-        .nav {
-            background: #333;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-        .nav a {
-            color: white;
-            margin: 0 15px;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-        .nav a:hover {
-            text-decoration: underline;
-        }
         .chat-box {
             width: 80%;
             max-width: 500px;
@@ -79,16 +65,26 @@
     </style>
 </head>
 <body>
-    <div class='nav'>
-        <a href='#' onclick='showGaming()'>Gaming</a>
-        <a href='#' onclick='showAbout()'>About Me</a>
-        <a href='#' onclick='showChat()'>Chat</a>
-    </div>
     <div class="container">
         <h1>Welcome to My Cool Website</h1>
         <button class="button" onclick="goToHomepage()">Get Started</button>
     </div>
+
     <script>
+        // Firebase setup
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+            authDomain: "coolwebsitechat.firebaseapp.com",
+            databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+            projectId: "coolwebsitechat",
+            storageBucket: "coolwebsitechat.appspot.com",
+            messagingSenderId: "341962893234",
+            appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+
         function goToHomepage() {
             document.body.innerHTML = `
                 <div class='nav'>
@@ -98,8 +94,6 @@
                 </div>
                 <div id='content' class='content'>
                     <h1>Welcome to the Homepage</h1>
-                    <p>Edit the About Me section as needed.</p>
-                    <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat' class='cat-image'>
                 </div>
             `;
         }
@@ -112,7 +106,7 @@
         function showAbout() {
             document.getElementById('content').innerHTML = `
                 <h1>About Me</h1>
-                <p>This is the About Me section. You can edit this content as needed.</p>
+                <p>This is the About Me section.</p>
             `;
         }
         function showChat() {
@@ -122,10 +116,44 @@
                     <div id='chatBox' class='chat-box'></div>
                     <input type='text' id='messageInput' placeholder='Type a message...' />
                     <button onclick='sendMessage()'>Send</button>
+                    <input type='file' id='imageInput' accept='image/*' />
+                    <button onclick='sendImage()'>Send Image</button>
                 </div>
             `;
             loadMessages();
         }
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput.value.trim() === '') return;
+            db.ref("messages").push({ text: messageInput.value });
+            messageInput.value = '';
+        }
+        function sendImage() {
+            const imageInput = document.getElementById('imageInput').files[0];
+            if (!imageInput) return;
+            const storageRef = storage.ref('images/' + imageInput.name);
+            storageRef.put(imageInput).then(snapshot => {
+                storageRef.getDownloadURL().then(url => {
+                    db.ref("messages").push({ image: url });
+                });
+            });
+        }
+        function loadMessages() {
+            const chatBox = document.getElementById('chatBox');
+            db.ref("messages").on("child_added", snapshot => {
+                const messageData = snapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                if (messageData.text) {
+                    messageDiv.innerText = messageData.text;
+                } else if (messageData.image) {
+                    messageDiv.innerHTML = `<img src="${messageData.image}" width="200" />`;
+                }
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
     </script>
 </body>
 </html>
+
