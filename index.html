@@ -197,7 +197,7 @@
           }`;
     
           // Only allow the post owner to delete their own post
-          if (localStorage.getItem("username") === msg.name) {
+          if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
             msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
           }
     
@@ -218,7 +218,7 @@
           const msg = snapshot.val();
       
           // Check if the current user is the one who sent the message, or if it's "nathanasd123"
-          if (msg.name === currentUser || msg.name === "nathanasd123") {
+          if (msg.name === currentUser || localStorage.getItem("username") === "nathanasd123") {
             db.ref("messages/" + id).remove(); // Delete message if it's from the current user or "nathanasd123"
           }
         });
