@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
 
-  <!-- Legacy Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
 
@@ -43,6 +43,7 @@
       padding: 20px;
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
     }
     .nav a {
       color: white;
@@ -82,7 +83,7 @@
     <a onclick="showHome()">Home</a>
     <a onclick="showGaming()">Gaming</a>
     <a onclick="showChat()">Chat</a>
-    <a onclick="showMusic()">Music</a> <!-- NEW MUSIC TAB -->
+    <a onclick="showMusic()">Music</a>
     <a onclick="login()">Login</a>
   </div>
 
@@ -103,7 +104,6 @@
       messagingSenderId: "341962893234",
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -145,28 +145,35 @@
 
     function showMusic() {
       document.getElementById("content").innerHTML = `
-        <h1>Music Player</h1>
-        <p>Enjoy some tunes 🎵</p>
-        <div>
-          <p><strong>Track 1:</strong></p>
-          <audio controls>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio><br><br>
-
-          <p><strong>Track 2:</strong></p>
-          <audio controls>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio><br><br>
-
-          <p><strong>Track 3:</strong></p>
-          <audio controls>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>
+        <h1>🎶 Music Jukebox</h1>
+        <input id="searchInput" type="text" placeholder="Enter a song..." style="padding:10px; width: 60%; font-size: 1rem;" />
+        <button class="button" onclick="searchAndPlay()">Search & Play</button>
+        <div style="margin-top: 20px;">
+          <iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
         </div>
       `;
+    }
+
+    function searchAndPlay() {
+      const query = document.getElementById("searchInput").value.trim();
+      if (!query) return;
+
+      const searchQuery = query.replace(/\s+/g, '+');
+      fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
+        .then(res => res.text())
+        .then(html => {
+          const match = html.match(/"videoId":"(.*?)"/);
+          if (match && match[1]) {
+            const videoId = match[1];
+            document.getElementById("ytplayer").src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+          } else {
+            alert("No video found.");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Failed to load video.");
+        });
     }
 
     function filterMessage(text) {
@@ -182,7 +189,6 @@
       const user = localStorage.getItem("username");
       const text = document.getElementById("messageInput").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
-
       if (!user || (!text && !imageFile)) return;
 
       let messageObj = { name: user, text: filterMessage(text) };
@@ -205,31 +211,21 @@
     function loadMessages() {
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML = "";
-
       db.ref("messages").off();
       db.ref("messages").on("child_added", snapshot => {
         const msg = snapshot.val();
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
-
         let displayName = msg.name;
-        if (msg.name === 'nathanasd123') {
-          displayName += ' 👑';
-        }
-
-        msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${
-          msg.image ? `<br><img src="${msg.image}" width="100" />` : ""
-        }`;
-
+        if (msg.name === 'nathanasd123') displayName += ' 👑';
+        msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100" />` : ""}`;
         if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
           msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
         }
-
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
-
-      db.ref("messages").on("child_removed", () => loadMessages());
+      db.ref("messages").on("child_removed", loadMessages);
     }
 
     function deleteMessage(id) {
@@ -264,7 +260,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (!data.error) {
+        if (data.access_token) {
           localStorage.setItem("accessToken", data.access_token);
           localStorage.setItem("refreshToken", data.refresh_token);
           fetch("https://wokki20.nl/polled/api/v1/profile", {
@@ -283,3 +279,4 @@
   </script>
 </body>
 </html>
+
