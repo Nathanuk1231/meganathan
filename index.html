@@ -1,92 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cool Website</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: white;
-      text-align: center;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 20px;
-    }
-    .button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #ff6600;
-      color: white;
-      border: none;
-      font-size: 1.2rem;
-      border-radius: 5px;
-      transition: 0.3s;
-      cursor: pointer;
-    }
-    .button:hover {
-      background: #ff4500;
-    }
-    .nav {
-      background: #222;
-      padding: 15px;
-      display: flex;
-      justify-content: center;
-    }
-    .nav a {
-      color: white;
-      margin: 0 20px;
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-    .nav a:hover {
-      text-decoration: underline;
-    }
-    .chat-box {
-      width: 80%;
-      max-width: 500px;
-      height: 300px;
-      border: 1px solid white;
-      overflow-y: auto;
-      margin-bottom: 10px;
-      padding: 10px;
-      background: #222;
-    }
-    .message {
-      background: #444;
-      padding: 5px;
-      margin: 5px 0;
-      border-radius: 5px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      width: 70%;
-      font-size: 1rem;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container" id="mainContainer">
-    <h1>Welcome to My Cool Website</h1>
-    <button class="button" onclick="goToHomepage()">Get Started</button>
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      onChildAdded,
+      onChildRemoved,
+      remove
+    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-  <script>
-    // Firebase Setup
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
       authDomain: "coolwebsitechat.firebaseapp.com",
@@ -97,21 +25,135 @@
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    function goToHomepage() {
-      document.body.innerHTML = `
-        <div class='nav'>
-          <a href='#' onclick='showGaming()'>Gaming</a>
-          <a href='#' onclick='showAbout()'>About Me</a>
-          <a href='#' onclick='showChat()'>Chat</a>
-        </div>
-        <div id='content'>
-          <h1>Welcome to the Homepage</h1>
-          <p>Edit the About Me section as needed.</p>
-          <img src='https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg' alt='Cute Cat'>
-        </div>
+    const bannedWords = ["fuck", "shit", "nigger", "nigga", "pussy", "prick", "slut"];
+
+    function filterMessage(msg) {
+      let words = msg.split(/\s+/);
+      return words
+        .map(word => bannedWords.includes(word.toLowerCase()) ? "****" : word)
+        .join(" ");
+    }
+
+    window.sendMessage = function () {
+      const messageInput = document.getElementById('messageInput');
+      const nameInput = document.getElementById('nameInput');
+      if (messageInput.value.trim() === '' || nameInput.value.trim() === '') return;
+      const cleanText = filterMessage(messageInput.value);
+      push(ref(db, 'messages'), {
+        name: nameInput.value.trim(),
+        text: cleanText
+      });
+      messageInput.value = '';
+    };
+
+    window.loadMessages = function () {
+      const chatBox = document.getElementById('chatBox');
+      const messagesRef = ref(db, 'messages');
+
+      onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message';
+        msgDiv.id = `msg-${snapshot.key}`;
+        msgDiv.innerHTML = `<strong>${msg.name}</strong>: ${msg.text} <span onclick="deleteMessage('${snapshot.key}')" class="delete">❌</span>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      onChildRemoved(messagesRef, (snapshot) => {
+        const msgEl = document.getElementById(`msg-${snapshot.key}`);
+        if (msgEl) msgEl.remove();
+      });
+    };
+
+    window.deleteMessage = function (id) {
+      remove(ref(db, `messages/${id}`));
+    };
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+    }
+    .nav {
+      background: #222;
+      padding: 20px;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+    .nav a {
+      color: white;
+      margin: 0 25px;
+      text-decoration: none;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    .container {
+      padding: 30px;
+    }
+    .chat-box {
+      width: 80%;
+      max-width: 500px;
+      margin: 0 auto;
+      height: 300px;
+      background: #333;
+      overflow-y: auto;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .message {
+      background: #444;
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      text-align: left;
+    }
+    .delete {
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin: 5px;
+      font-size: 1rem;
+      width: 200px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="#" onclick="showHome()">Home</a>
+    <a href="#" onclick="showGaming()">Gaming</a>
+    <a href="#" onclick="showAbout()">About Me</a>
+    <a href="#" onclick="showChat()">Chat</a>
+  </div>
+
+  <div class="container" id="content">
+    <h1>Welcome to My Cool Website</h1>
+    <p>Click the tabs above to explore!</p>
+  </div>
+
+  <script>
+    function showHome() {
+      document.getElementById('content').innerHTML = `
+        <h1>Welcome to My Cool Website</h1>
+        <p>Click the tabs above to explore!</p>
       `;
     }
 
@@ -125,38 +167,19 @@
     function showAbout() {
       document.getElementById('content').innerHTML = `
         <h1>About Me</h1>
-        <p>This is the About Me section. You can edit this content as needed.</p>
+        <p>This is the About Me section. Edit as you like.</p>
       `;
     }
 
     function showChat() {
       document.getElementById('content').innerHTML = `
         <h1>Chat Room</h1>
+        <input type='text' id='nameInput' placeholder='Your Name' />
         <div class='chat-box' id='chatBox'></div>
-        <input type='text' id='messageInput' placeholder='Type a message...' />
+        <input type='text' id='messageInput' placeholder='Type your message...' />
         <button onclick='sendMessage()'>Send</button>
       `;
       loadMessages();
-    }
-
-    function sendMessage() {
-      const messageInput = document.getElementById('messageInput');
-      if (messageInput.value.trim() === '') return;
-      const newMessageRef = db.ref("messages").push();
-      newMessageRef.set({ text: messageInput.value });
-      messageInput.value = '';
-    }
-
-    function loadMessages() {
-      const chatBox = document.getElementById('chatBox');
-      db.ref("messages").on("child_added", snapshot => {
-        const messageData = snapshot.val();
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        messageDiv.innerText = messageData.text;
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
     }
   </script>
 </body>
