@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
+
+  <!-- Firebase (Classic SDK) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -88,36 +91,17 @@
   </div>
 
   <script>
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-     import {
-       getDatabase,
-       ref,
-       push,
-       onChildAdded,
-       onChildRemoved,
-       remove
-     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
- 
-     const firebaseConfig = {
-       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-       authDomain: "coolwebsitechat.firebaseapp.com",
-       databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
-       projectId: "coolwebsitechat",
-       storageBucket: "coolwebsitechat.appspot.com",
-       messagingSenderId: "341962893234",
-       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
-     };
- 
     // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
       authDomain: "coolwebsitechat.firebaseapp.com",
       databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
       projectId: "coolwebsitechat",
-      storageBucket: "coolwebsitechat.firebasestorage.app",
+      storageBucket: "coolwebsitechat.appspot.com",
       messagingSenderId: "341962893234",
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -215,4 +199,3 @@
   </script>
 </body>
 </html>
-
