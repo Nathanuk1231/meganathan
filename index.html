@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
 
-  <!-- Firebase (Classic SDK) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <!-- Legacy Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
 
   <style>
     body {
@@ -102,8 +102,16 @@
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    const badWords = [
+      "nigga","shit","cunt","pussy","retard","nigger","nword","asshole",
+      "alass","ass","finger","latina","poo","wee","porn","gay","prick",
+      "penis","bollocks","bastard","bloody","dick","pillock","frigging",
+      "bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"
+    ];
 
     function showHome() {
       document.getElementById("content").innerHTML = `
@@ -131,13 +139,6 @@
       `;
       loadMessages();
     }
-
-    const badWords = [
-      "nigga","shit","cunt","pussy","retard","nigger","nword","asshole",
-      "alass","ass","finger","latina","poo","wee","porn","gay","prick",
-      "penis","bollocks","bastard","bloody","dick","pillock","frigging",
-      "bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"
-    ];
 
     function filterMessage(text) {
       let filtered = text;
