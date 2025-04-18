@@ -210,17 +210,20 @@
         });
       }
 
-    function deleteMessage(id) {
-      const currentUser = localStorage.getItem("username");
-  
-      // Get the message to verify if the current user is the one who sent it
-      db.ref("messages/" + id).once("value", snapshot => {
-        const msg = snapshot.val();
-        if (msg.name === currentUser || msg.name === "nathanasd123") {
-          db.ref("messages/" + id).remove(); // Delete message if it's from the current user
-        }
-      });
-    }
+      function deleteMessage(id) {
+        const currentUser = localStorage.getItem("username");
+      
+        // Get the message to verify if the current user is the one who sent it, or if it's "nathanasd123"
+        db.ref("messages/" + id).once("value", snapshot => {
+          const msg = snapshot.val();
+      
+          // Check if the current user is the one who sent the message, or if it's "nathanasd123"
+          if (msg.name === currentUser || msg.name === "nathanasd123") {
+            db.ref("messages/" + id).remove(); // Delete message if it's from the current user or "nathanasd123"
+          }
+        });
+      }
+
 
     // Login function (Redirect to OAuth authorization)
     function login() {
