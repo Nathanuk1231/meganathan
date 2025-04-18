@@ -82,7 +82,8 @@
     <a onclick="showHome()">Home</a>
     <a onclick="showGaming()">Gaming</a>
     <a onclick="showChat()">Chat</a>
-    <a onclick="login()">Login</a> <!-- Login Button -->
+    <a onclick="showMusic()">Music</a> <!-- NEW MUSIC TAB -->
+    <a onclick="login()">Login</a>
   </div>
 
   <div id="content" class="container">
@@ -103,11 +104,10 @@
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let badWords = [
+    const badWords = [
       "nigga","shit","cunt","pussy","retard","nigger","nword","asshole",
       "alass","ass","finger","latina","poo","wee","porn","gay","prick",
       "penis","bollocks","bastard","bloody","dick","pillock","frigging",
@@ -143,6 +143,32 @@
       loadMessages();
     }
 
+    function showMusic() {
+      document.getElementById("content").innerHTML = `
+        <h1>Music Player</h1>
+        <p>Enjoy some tunes 🎵</p>
+        <div>
+          <p><strong>Track 1:</strong></p>
+          <audio controls>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio><br><br>
+
+          <p><strong>Track 2:</strong></p>
+          <audio controls>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio><br><br>
+
+          <p><strong>Track 3:</strong></p>
+          <audio controls>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      `;
+    }
+
     function filterMessage(text) {
       let filtered = text;
       badWords.forEach(word => {
@@ -153,7 +179,7 @@
     }
 
     function sendMessage() {
-      const user = localStorage.getItem("username"); // Use username from localStorage
+      const user = localStorage.getItem("username");
       const text = document.getElementById("messageInput").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
 
@@ -176,63 +202,51 @@
       document.getElementById("imageInput").value = "";
     }
 
-       function loadMessages() {
-        const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML = ""; // Clear the chat box before loading new messages
-    
-        db.ref("messages").off(); // Prevent duplicate event listeners
-        db.ref("messages").on("child_added", snapshot => {
-          const msg = snapshot.val();
-          const msgDiv = document.createElement("div");
-          msgDiv.className = "message";
-    
-          // Check if the user is 'nathanasd123' and add a crown for display purposes
-          let displayName = msg.name;
-          if (msg.name === 'nathanasd123') {
-            displayName += ' 👑'; // Add crown for display
-          }
-    
-          msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${
-            msg.image ? `<br><img src="${msg.image}" width="100" />` : ""
-          }`;
-    
-          // Only allow the post owner or "nathanasd123" to delete their own post
-          if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
-            msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
-          }
-    
-          chatBox.appendChild(msgDiv);
-          chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat
-        });
-    
-        db.ref("messages").on("child_removed", snapshot => {
-          // When a message is deleted, refresh the chat
-          loadMessages();
-        });
-      }
+    function loadMessages() {
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML = "";
 
-      function deleteMessage(id) {
-        const currentUser = localStorage.getItem("username");
-    
-        // Get the message to verify if the current user is the one who sent it, or if it's "nathanasd123"
-        db.ref("messages/" + id).once("value", snapshot => {
-          const msg = snapshot.val();
-    
-          // Check if the current user is the one who sent the message, or if it's "nathanasd123"
-          if (msg.name === currentUser || localStorage.getItem("username") === "nathanasd123") {
-            db.ref("messages/" + id).remove(); // Delete message if it's from the current user or "nathanasd123"
-          }
-        });
-      }
+      db.ref("messages").off();
+      db.ref("messages").on("child_added", snapshot => {
+        const msg = snapshot.val();
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message";
 
+        let displayName = msg.name;
+        if (msg.name === 'nathanasd123') {
+          displayName += ' 👑';
+        }
 
-    // Login function (Redirect to OAuth authorization)
+        msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${
+          msg.image ? `<br><img src="${msg.image}" width="100" />` : ""
+        }`;
+
+        if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
+          msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
+        }
+
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      db.ref("messages").on("child_removed", () => loadMessages());
+    }
+
+    function deleteMessage(id) {
+      const currentUser = localStorage.getItem("username");
+      db.ref("messages/" + id).once("value", snapshot => {
+        const msg = snapshot.val();
+        if (msg.name === currentUser || currentUser === "nathanasd123") {
+          db.ref("messages/" + id).remove();
+        }
+      });
+    }
+
     function login() {
       const url = "https://wokki20.nl/polled/api/v1/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
       window.location.href = url;
     }
 
-    // Handle the redirect after authorization
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
@@ -250,31 +264,21 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.error) {
-          console.error('Error:', data.error);
-        } else {
+        if (!data.error) {
           localStorage.setItem("accessToken", data.access_token);
           localStorage.setItem("refreshToken", data.refresh_token);
-
-          // Fetch user's profile after authorization
           fetch("https://wokki20.nl/polled/api/v1/profile", {
             method: "GET",
-            headers: {
-              "Authorization": "Bearer " + data.access_token
-            }
+            headers: { "Authorization": "Bearer " + data.access_token }
           })
           .then(response => response.json())
           .then(profileData => {
             if (profileData.status === "success") {
-              localStorage.setItem("username", profileData.profile.username); // Store username
-            } else {
-              console.error("Error:", profileData.error);
+              localStorage.setItem("username", profileData.profile.username);
             }
-          })
-          .catch(error => console.error("Request failed", error));
+          });
         }
-      })
-      .catch(error => console.error('Request failed', error));
+      });
     }
   </script>
 </body>
