@@ -82,6 +82,7 @@
     <a onclick="showHome()">Home</a>
     <a onclick="showGaming()">Gaming</a>
     <a onclick="showChat()">Chat</a>
+    <a onclick="login()">Login</a> <!-- Login Button -->
   </div>
 
   <div id="content" class="container">
@@ -113,6 +114,9 @@
       "bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"
     ];
 
+    const clientId = "e22163c76ed900a4e7be324a6fcb4048";
+    const redirectUri = encodeURIComponent("https://polled.wokki20.nl");
+
     function showHome() {
       document.getElementById("content").innerHTML = `
         <h1>Welcome to My Cool Website</h1>
@@ -132,7 +136,6 @@
       document.getElementById("content").innerHTML = `
         <h1>Chat Room</h1>
         <div class="chat-box" id="chatBox"></div>
-        <input type="text" id="username" placeholder="Enter your name" /><br><br>
         <input type="text" id="messageInput" placeholder="Type a message..." />
         <input type="file" id="imageInput" accept="image/*" />
         <button class="button" onclick="sendMessage()">Send</button>
@@ -150,7 +153,7 @@
     }
 
     function sendMessage() {
-      const user = document.getElementById("username").value.trim();
+      const user = localStorage.getItem("username"); // Use username from localStorage
       const text = document.getElementById("messageInput").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
 
@@ -196,6 +199,57 @@
 
     function deleteMessage(id) {
       db.ref("messages/" + id).remove();
+    }
+
+    // Login function (Redirect to OAuth authorization)
+    function login() {
+      const url = "https://wokki20.nl/polled/api/v1/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
+      window.location.href = url;
+    }
+
+    // Handle the redirect after authorization
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    if (code) {
+      const formData = new FormData();
+      formData.append("grant_type", "authorization_code");
+      formData.append("code", code);
+      formData.append("redirect_uri", redirectUri);
+      formData.append("client_id", clientId);
+      formData.append("client_secret", "INSERT_CLIENT_SECRET_HERE");
+
+      fetch('https://wokki20.nl/polled/api/v1/authorization_code', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          console.error('Error:', data.error);
+        } else {
+          localStorage.setItem("accessToken", data.access_token);
+          localStorage.setItem("refreshToken", data.refresh_token);
+
+          // Fetch user's profile after authorization
+          fetch("https://wokki20.nl/polled/api/v1/profile", {
+            method: "GET",
+            headers: {
+              "Authorization": "Bearer " + data.access_token
+            }
+          })
+          .then(response => response.json())
+          .then(profileData => {
+            if (profileData.status === "success") {
+              localStorage.setItem("username", profileData.username); // Store username
+            } else {
+              console.error("Error:", profileData.error);
+            }
+          })
+          .catch(error => console.error("Request failed", error));
+        }
+      })
+      .catch(error => console.error('Request failed', error));
     }
   </script>
 </body>
