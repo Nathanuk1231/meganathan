@@ -1,186 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      push,
-      onChildAdded,
-      onChildRemoved,
-      remove
-    } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-      authDomain: "coolwebsitechat.firebaseapp.com",
-      databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
-      projectId: "coolwebsitechat",
-      storageBucket: "coolwebsitechat.appspot.com",
-      messagingSenderId: "341962893234",
-      appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const bannedWords = ["fuck", "shit", "nigger", "nigga", "pussy", "prick", "slut"];
-
-    function filterMessage(msg) {
-      let words = msg.split(/\s+/);
-      return words
-        .map(word => bannedWords.includes(word.toLowerCase()) ? "****" : word)
-        .join(" ");
-    }
-
-    window.sendMessage = function () {
-      const messageInput = document.getElementById('messageInput');
-      const nameInput = document.getElementById('nameInput');
-      if (messageInput.value.trim() === '' || nameInput.value.trim() === '') return;
-      const cleanText = filterMessage(messageInput.value);
-      push(ref(db, 'messages'), {
-        name: nameInput.value.trim(),
-        text: cleanText
-      });
-      messageInput.value = '';
-    };
-
-    window.loadMessages = function () {
-      const chatBox = document.getElementById('chatBox');
-      const messagesRef = ref(db, 'messages');
-
-      onChildAdded(messagesRef, (snapshot) => {
-        const msg = snapshot.val();
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-        msgDiv.id = `msg-${snapshot.key}`;
-        msgDiv.innerHTML = `<strong>${msg.name}</strong>: ${msg.text} <span onclick="deleteMessage('${snapshot.key}')" class="delete">❌</span>`;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-
-      onChildRemoved(messagesRef, (snapshot) => {
-        const msgEl = document.getElementById(`msg-${snapshot.key}`);
-        if (msgEl) msgEl.remove();
-      });
-    };
-
-    window.deleteMessage = function (id) {
-      remove(ref(db, `messages/${id}`));
-    };
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
   <style>
     body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
       background: linear-gradient(135deg, #1e3c72, #2a5298);
       color: white;
-      font-family: Arial, sans-serif;
       text-align: center;
-      padding: 0;
-      margin: 0;
+    }
+    .container {
+      padding: 20px;
+    }
+    h1 {
+      font-size: 3rem;
+    }
+    .button {
+      padding: 10px 20px;
+      background: #ff6600;
+      color: white;
+      border: none;
+      font-size: 1.2rem;
+      border-radius: 5px;
+      transition: 0.3s;
+      cursor: pointer;
+      margin: 10px;
+    }
+    .button:hover {
+      background: #ff4500;
     }
     .nav {
-      background: #222;
+      background: #333;
       padding: 20px;
-      font-size: 1.5rem;
       display: flex;
       justify-content: center;
     }
     .nav a {
       color: white;
-      margin: 0 25px;
+      margin: 0 20px;
       text-decoration: none;
+      font-size: 1.5rem;
+      cursor: pointer;
     }
     .nav a:hover {
       text-decoration: underline;
     }
-    .container {
-      padding: 30px;
-    }
     .chat-box {
       width: 80%;
       max-width: 500px;
-      margin: 0 auto;
       height: 300px;
-      background: #333;
+      border: 1px solid white;
       overflow-y: auto;
+      margin: 10px auto;
       padding: 10px;
-      border-radius: 5px;
+      background: #222;
     }
     .message {
       background: #444;
-      padding: 8px;
-      margin: 5px;
+      padding: 5px;
+      margin: 5px 0;
       border-radius: 5px;
-      text-align: left;
     }
-    .delete {
+    .delete-button {
       color: red;
       cursor: pointer;
       margin-left: 10px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      margin: 5px;
-      font-size: 1rem;
-      width: 200px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 1rem;
-      margin: 5px;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="nav">
-    <a href="#" onclick="showHome()">Home</a>
-    <a href="#" onclick="showGaming()">Gaming</a>
-    <a href="#" onclick="showAbout()">About Me</a>
-    <a href="#" onclick="showChat()">Chat</a>
+    <a onclick="showHome()">Home</a>
+    <a onclick="showGaming()">Gaming</a>
+    <a onclick="showChat()">Chat</a>
   </div>
 
-  <div class="container" id="content">
+  <div id="content" class="container">
     <h1>Welcome to My Cool Website</h1>
-    <p>Click the tabs above to explore!</p>
+    <p>Click the buttons above to explore the site!</p>
+    <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
   </div>
 
   <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+      authDomain: "coolwebsitechat.firebaseapp.com",
+      databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+      projectId: "coolwebsitechat",
+      storageBucket: "coolwebsitechat.firebasestorage.app",
+      messagingSenderId: "341962893234",
+      appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     function showHome() {
-      document.getElementById('content').innerHTML = `
+      document.getElementById("content").innerHTML = `
         <h1>Welcome to My Cool Website</h1>
-        <p>Click the tabs above to explore!</p>
+        <p>Click the buttons above to explore the site!</p>
+        <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
       `;
     }
 
     function showGaming() {
-      document.getElementById('content').innerHTML = `
+      document.getElementById("content").innerHTML = `
         <h1>Gaming Section</h1>
-        <iframe src='https://chromedino.com/' width='800' height='400' style='border:none;'></iframe>
-      `;
-    }
-
-    function showAbout() {
-      document.getElementById('content').innerHTML = `
-        <h1>About Me</h1>
-        <p>This is the About Me section. Edit as you like.</p>
+        <iframe src="https://chromedino.com/" width="800" height="400" style="border:none;"></iframe>
       `;
     }
 
     function showChat() {
-      document.getElementById('content').innerHTML = `
+      document.getElementById("content").innerHTML = `
         <h1>Chat Room</h1>
-        <input type='text' id='nameInput' placeholder='Your Name' />
-        <div class='chat-box' id='chatBox'></div>
-        <input type='text' id='messageInput' placeholder='Type your message...' />
-        <button onclick='sendMessage()'>Send</button>
+        <div class="chat-box" id="chatBox"></div>
+        <input type="text" id="username" placeholder="Enter your name" /><br><br>
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <input type="file" id="imageInput" accept="image/*" />
+        <button class="button" onclick="sendMessage()">Send</button>
       `;
       loadMessages();
+    }
+
+    const badWords = [
+      "nigga","shit","cunt","pussy","retard","nigger","nword","asshole",
+      "alass","ass","finger","latina","poo","wee","porn","gay","prick",
+      "penis","bollocks","bastard","bloody","dick","pillock","frigging",
+      "bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"
+    ];
+
+    function filterMessage(text) {
+      let filtered = text;
+      badWords.forEach(word => {
+        const regex = new RegExp(word, 'gi');
+        filtered = filtered.replace(regex, '*'.repeat(word.length));
+      });
+      return filtered;
+    }
+
+    function sendMessage() {
+      const user = document.getElementById("username").value.trim();
+      const text = document.getElementById("messageInput").value.trim();
+      const imageFile = document.getElementById("imageInput").files[0];
+
+      if (!user || (!text && !imageFile)) return;
+
+      let messageObj = { name: user, text: filterMessage(text) };
+
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          messageObj.image = reader.result;
+          db.ref("messages").push(messageObj);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        db.ref("messages").push(messageObj);
+      }
+
+      document.getElementById("messageInput").value = "";
+      document.getElementById("imageInput").value = "";
+    }
+
+    function loadMessages() {
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML = "";
+
+      db.ref("messages").off(); // prevent duplicates
+      db.ref("messages").on("child_added", snapshot => {
+        const msg = snapshot.val();
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message";
+        msgDiv.innerHTML = `<strong>${msg.name}:</strong> ${msg.text || ""} ${
+          msg.image ? `<br><img src="${msg.image}" width="100" />` : ""
+        } <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      db.ref("messages").on("child_removed", snapshot => {
+        loadMessages(); // refresh on delete
+      });
+    }
+
+    function deleteMessage(id) {
+      db.ref("messages/" + id).remove();
     }
   </script>
 </body>
 </html>
+
