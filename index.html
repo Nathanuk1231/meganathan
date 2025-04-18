@@ -241,7 +241,7 @@
           .then(response => response.json())
           .then(profileData => {
             if (profileData.status === "success") {
-              localStorage.setItem("username", profileData.username); // Store username
+              localStorage.setItem("username", profileData.profile.username); // Store username
             } else {
               console.error("Error:", profileData.error);
             }
