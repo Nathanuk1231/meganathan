@@ -176,11 +176,11 @@
       document.getElementById("imageInput").value = "";
     }
 
-      function loadMessages() {
+       function loadMessages() {
         const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML = "";
+        chatBox.innerHTML = ""; // Clear the chat box before loading new messages
     
-        db.ref("messages").off(); // prevent duplicates
+        db.ref("messages").off(); // Prevent duplicate event listeners
         db.ref("messages").on("child_added", snapshot => {
           const msg = snapshot.val();
           const msgDiv = document.createElement("div");
@@ -196,27 +196,28 @@
             msg.image ? `<br><img src="${msg.image}" width="100" />` : ""
           }`;
     
-          // Only allow the post owner to delete their own post
+          // Only allow the post owner or "nathanasd123" to delete their own post
           if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
             msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
           }
     
           chatBox.appendChild(msgDiv);
-          chatBox.scrollTop = chatBox.scrollHeight;
+          chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom of the chat
         });
     
         db.ref("messages").on("child_removed", snapshot => {
-          loadMessages(); // refresh on delete
+          // When a message is deleted, refresh the chat
+          loadMessages();
         });
       }
 
       function deleteMessage(id) {
         const currentUser = localStorage.getItem("username");
-      
+    
         // Get the message to verify if the current user is the one who sent it, or if it's "nathanasd123"
         db.ref("messages/" + id).once("value", snapshot => {
           const msg = snapshot.val();
-      
+    
           // Check if the current user is the one who sent the message, or if it's "nathanasd123"
           if (msg.name === currentUser || localStorage.getItem("username") === "nathanasd123") {
             db.ref("messages/" + id).remove(); // Delete message if it's from the current user or "nathanasd123"
