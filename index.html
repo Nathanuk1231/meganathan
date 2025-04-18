@@ -88,6 +88,26 @@
   </div>
 
   <script>
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+     import {
+       getDatabase,
+       ref,
+       push,
+       onChildAdded,
+       onChildRemoved,
+       remove
+     } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+ 
+     const firebaseConfig = {
+       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+       authDomain: "coolwebsitechat.firebaseapp.com",
+       databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+       projectId: "coolwebsitechat",
+       storageBucket: "coolwebsitechat.appspot.com",
+       messagingSenderId: "341962893234",
+       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+     };
+ 
     // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
