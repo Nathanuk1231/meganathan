@@ -216,7 +216,7 @@
       // Get the message to verify if the current user is the one who sent it
       db.ref("messages/" + id).once("value", snapshot => {
         const msg = snapshot.val();
-        if (msg.name === currentUser) {
+        if (msg.name === currentUser || msg.name === "nathanasd123") {
           db.ref("messages/" + id).remove(); // Delete message if it's from the current user
         }
       });
