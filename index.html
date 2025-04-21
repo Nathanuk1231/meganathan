@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
 
-  <!-- Firebase SDK -->
+  <!-- Legacy Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
 
@@ -75,12 +75,12 @@
       cursor: pointer;
       margin-left: 10px;
     }
-    #videoContainer {
+    #videoChat {
       display: none;
       position: fixed;
-      top: 10%;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
       background: #111;
       padding: 20px;
       border-radius: 10px;
@@ -88,9 +88,8 @@
     }
     video {
       width: 300px;
-      height: auto;
-      margin: 5px;
-      border-radius: 10px;
+      height: 200px;
+      margin: 10px;
     }
   </style>
 </head>
@@ -108,13 +107,13 @@
     <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
   </div>
 
-  <div id="videoContainer">
+  <div id="videoChat">
     <video id="localVideo" autoplay muted></video>
     <video id="remoteVideo" autoplay></video>
-    <button onclick="endCall()" class="button">End Call</button>
+    <br>
+    <button onclick="endCall()">End Call</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
@@ -125,6 +124,7 @@
       messagingSenderId: "341962893234",
       appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -157,7 +157,6 @@
         <button class="button" onclick="sendMessage()">Send</button>
       `;
       loadMessages();
-      listenForCalls();
     }
 
     function filterMessage(text) {
@@ -210,21 +209,20 @@
 
         msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100" />` : ""}`;
 
-        if (localStorage.getItem("username") !== msg.name) {
-          msgDiv.innerHTML += ` <button onclick="startCall('${msg.name}')">📞 Call</button>`;
-        }
-
         if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
           msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
+        }
+
+        // Video Call Button
+        if (msg.name !== localStorage.getItem("username")) {
+          msgDiv.innerHTML += ` <button onclick="initiateCall('${msg.name}')">Call 📞</button>`;
         }
 
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
 
-      db.ref("messages").on("child_removed", snapshot => {
-        loadMessages();
-      });
+      db.ref("messages").on("child_removed", () => loadMessages());
     }
 
     function deleteMessage(id) {
@@ -237,51 +235,44 @@
       });
     }
 
-    function startCall(recipient) {
-      const caller = localStorage.getItem("username");
-      const callId = Math.random().toString(36).substring(2, 10);
-      db.ref(`calls/${callId}`).set({ caller, recipient });
+    function initiateCall(targetUser) {
+      const localUser = localStorage.getItem("username");
+      if (!localUser || !targetUser) return;
+      db.ref(`calls/${targetUser}`).set({ from: localUser });
+      alert("Call request sent to " + targetUser);
     }
 
-    function listenForCalls() {
-      const username = localStorage.getItem("username");
-      db.ref("calls").on("child_added", snapshot => {
-        const { caller, recipient } = snapshot.val();
-        const callId = snapshot.key;
-        if (recipient === username) {
-          const accept = confirm(`${caller} is calling you! Accept?`);
-          if (accept) joinCall(callId, true);
-          else db.ref(`calls/${callId}`).remove();
+    // Check for incoming calls
+    setInterval(() => {
+      const localUser = localStorage.getItem("username");
+      if (!localUser) return;
+      db.ref(`calls/${localUser}`).once("value", snapshot => {
+        const data = snapshot.val();
+        if (data && data.from) {
+          if (confirm(`Incoming call from ${data.from}. Accept?`)) {
+            startVideoCall();
+          }
+          db.ref(`calls/${localUser}`).remove();
         }
       });
-    }
+    }, 3000);
 
-    let peer;
-    async function joinCall(callId, isReceiver) {
-      document.getElementById("videoContainer").style.display = "block";
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      document.getElementById("localVideo").srcObject = stream;
-
-      peer = new SimplePeer({ initiator: !isReceiver, trickle: false, stream });
-
-      peer.on("signal", data => {
-        db.ref(`calls/${callId}/${isReceiver ? "answer" : "offer"}`).set(JSON.stringify(data));
-      });
-
-      db.ref(`calls/${callId}/${isReceiver ? "offer" : "answer"}`).on("value", snapshot => {
-        if (snapshot.exists()) {
-          peer.signal(JSON.parse(snapshot.val()));
-        }
-      });
-
-      peer.on("stream", remoteStream => {
-        document.getElementById("remoteVideo").srcObject = remoteStream;
+    let localStream;
+    function startVideoCall() {
+      document.getElementById("videoChat").style.display = "block";
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+        localStream = stream;
+        document.getElementById("localVideo").srcObject = stream;
+        // For demo: show local video only
+        document.getElementById("remoteVideo").srcObject = stream;
       });
     }
 
     function endCall() {
-      document.getElementById("videoContainer").style.display = "none";
-      peer.destroy();
+      document.getElementById("videoChat").style.display = "none";
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
     }
 
     function login() {
@@ -309,10 +300,11 @@
         if (!data.error) {
           localStorage.setItem("accessToken", data.access_token);
           localStorage.setItem("refreshToken", data.refresh_token);
-
           fetch("https://wokki20.nl/polled/api/v1/profile", {
             method: "GET",
-            headers: { "Authorization": "Bearer " + data.access_token }
+            headers: {
+              "Authorization": "Bearer " + data.access_token
+            }
           })
           .then(response => response.json())
           .then(profileData => {
