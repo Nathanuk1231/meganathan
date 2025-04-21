@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
 
@@ -43,7 +43,6 @@
       padding: 20px;
       display: flex;
       justify-content: center;
-      flex-wrap: wrap;
     }
     .nav a {
       color: white;
@@ -76,6 +75,23 @@
       cursor: pointer;
       margin-left: 10px;
     }
+    #videoContainer {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 9999;
+    }
+    video {
+      width: 300px;
+      height: auto;
+      margin: 5px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -83,7 +99,6 @@
     <a onclick="showHome()">Home</a>
     <a onclick="showGaming()">Gaming</a>
     <a onclick="showChat()">Chat</a>
-    <a onclick="showMusic()">Music</a>
     <a onclick="login()">Login</a>
   </div>
 
@@ -93,8 +108,14 @@
     <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
   </div>
 
+  <div id="videoContainer">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+    <button onclick="endCall()" class="button">End Call</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
       authDomain: "coolwebsitechat.firebaseapp.com",
@@ -107,12 +128,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const badWords = [
-      "nigga","shit","cunt","pussy","retard","nigger","nword","asshole",
-      "alass","ass","finger","latina","poo","wee","porn","gay","prick",
-      "penis","bollocks","bastard","bloody","dick","pillock","frigging",
-      "bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"
-    ];
+    const badWords = ["nigga","shit","cunt","pussy","retard","nigger","nword","asshole","alass","ass","finger","latina","poo","wee","porn","gay","prick","penis","bollocks","bastard","bloody","dick","pillock","frigging","bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"];
 
     const clientId = "9504be431db31b01c4c1738b6edff281";
     const redirectUri = encodeURIComponent("https://nathanuk1231.github.io/meganathan/");
@@ -141,39 +157,7 @@
         <button class="button" onclick="sendMessage()">Send</button>
       `;
       loadMessages();
-    }
-
-    function showMusic() {
-      document.getElementById("content").innerHTML = `
-        <h1>🎶 Music Jukebox</h1>
-        <input id="searchInput" type="text" placeholder="Enter a song..." style="padding:10px; width: 60%; font-size: 1rem;" />
-        <button class="button" onclick="searchAndPlay()">Search & Play</button>
-        <div style="margin-top: 20px;">
-          <iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
-        </div>
-      `;
-    }
-
-    function searchAndPlay() {
-      const query = document.getElementById("searchInput").value.trim();
-      if (!query) return;
-
-      const searchQuery = query.replace(/\s+/g, '+');
-      fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
-        .then(res => res.text())
-        .then(html => {
-          const match = html.match(/"videoId":"(.*?)"/);
-          if (match && match[1]) {
-            const videoId = match[1];
-            document.getElementById("ytplayer").src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-          } else {
-            alert("No video found.");
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Failed to load video.");
-        });
+      listenForCalls();
     }
 
     function filterMessage(text) {
@@ -189,6 +173,7 @@
       const user = localStorage.getItem("username");
       const text = document.getElementById("messageInput").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
+
       if (!user || (!text && !imageFile)) return;
 
       let messageObj = { name: user, text: filterMessage(text) };
@@ -211,31 +196,92 @@
     function loadMessages() {
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML = "";
+
       db.ref("messages").off();
       db.ref("messages").on("child_added", snapshot => {
         const msg = snapshot.val();
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
+
         let displayName = msg.name;
-        if (msg.name === 'nathanasd123') displayName += ' 👑';
+        if (msg.name === 'nathanasd123') {
+          displayName += ' 👑';
+        }
+
         msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100" />` : ""}`;
+
+        if (localStorage.getItem("username") !== msg.name) {
+          msgDiv.innerHTML += ` <button onclick="startCall('${msg.name}')">📞 Call</button>`;
+        }
+
         if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
           msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
         }
+
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
-      db.ref("messages").on("child_removed", loadMessages);
+
+      db.ref("messages").on("child_removed", snapshot => {
+        loadMessages();
+      });
     }
 
     function deleteMessage(id) {
       const currentUser = localStorage.getItem("username");
       db.ref("messages/" + id).once("value", snapshot => {
         const msg = snapshot.val();
-        if (msg.name === currentUser || currentUser === "nathanasd123") {
+        if (msg.name === currentUser || localStorage.getItem("username") === "nathanasd123") {
           db.ref("messages/" + id).remove();
         }
       });
+    }
+
+    function startCall(recipient) {
+      const caller = localStorage.getItem("username");
+      const callId = Math.random().toString(36).substring(2, 10);
+      db.ref(`calls/${callId}`).set({ caller, recipient });
+    }
+
+    function listenForCalls() {
+      const username = localStorage.getItem("username");
+      db.ref("calls").on("child_added", snapshot => {
+        const { caller, recipient } = snapshot.val();
+        const callId = snapshot.key;
+        if (recipient === username) {
+          const accept = confirm(`${caller} is calling you! Accept?`);
+          if (accept) joinCall(callId, true);
+          else db.ref(`calls/${callId}`).remove();
+        }
+      });
+    }
+
+    let peer;
+    async function joinCall(callId, isReceiver) {
+      document.getElementById("videoContainer").style.display = "block";
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      document.getElementById("localVideo").srcObject = stream;
+
+      peer = new SimplePeer({ initiator: !isReceiver, trickle: false, stream });
+
+      peer.on("signal", data => {
+        db.ref(`calls/${callId}/${isReceiver ? "answer" : "offer"}`).set(JSON.stringify(data));
+      });
+
+      db.ref(`calls/${callId}/${isReceiver ? "offer" : "answer"}`).on("value", snapshot => {
+        if (snapshot.exists()) {
+          peer.signal(JSON.parse(snapshot.val()));
+        }
+      });
+
+      peer.on("stream", remoteStream => {
+        document.getElementById("remoteVideo").srcObject = remoteStream;
+      });
+    }
+
+    function endCall() {
+      document.getElementById("videoContainer").style.display = "none";
+      peer.destroy();
     }
 
     function login() {
@@ -260,9 +306,10 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.access_token) {
+        if (!data.error) {
           localStorage.setItem("accessToken", data.access_token);
           localStorage.setItem("refreshToken", data.refresh_token);
+
           fetch("https://wokki20.nl/polled/api/v1/profile", {
             method: "GET",
             headers: { "Authorization": "Bearer " + data.access_token }
@@ -279,4 +326,3 @@
   </script>
 </body>
 </html>
-
