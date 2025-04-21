@@ -91,6 +91,9 @@
       height: 200px;
       margin: 10px;
     }
+    .username-container {
+      margin: 20px;
+    }
   </style>
 </head>
 <body>
@@ -114,6 +117,13 @@
     <button onclick="endCall()">End Call</button>
   </div>
 
+  <!-- Username Input -->
+  <div id="usernamePrompt" class="username-container" style="display: none;">
+    <h2>Please enter your username:</h2>
+    <input type="text" id="usernameInput" placeholder="Enter username" />
+    <button onclick="saveUsername()">Save Username</button>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
@@ -132,6 +142,22 @@
 
     const clientId = "9504be431db31b01c4c1738b6edff281";
     const redirectUri = encodeURIComponent("https://nathanuk1231.github.io/meganathan/");
+
+    // Show prompt for username if not set
+    if (!localStorage.getItem("username")) {
+      document.getElementById("usernamePrompt").style.display = "block";
+    } else {
+      loadMessages();
+    }
+
+    function saveUsername() {
+      const username = document.getElementById("usernameInput").value.trim();
+      if (username) {
+        localStorage.setItem("username", username);
+        document.getElementById("usernamePrompt").style.display = "none";
+        loadMessages();
+      }
+    }
 
     function showHome() {
       document.getElementById("content").innerHTML = `
@@ -278,42 +304,6 @@
     function login() {
       const url = "https://wokki20.nl/polled/api/v1/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
       window.location.href = url;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-
-    if (code) {
-      const formData = new FormData();
-      formData.append("grant_type", "authorization_code");
-      formData.append("code", code);
-      formData.append("redirect_uri", "https://nathanuk1231.github.io/meganathan/");
-      formData.append("client_id", clientId);
-      formData.append("client_secret", "b84bff0ec7b6a9e83b36217faecd44722d2e172d8dc90547533ca08f0b542c4d");
-
-      fetch('https://wokki20.nl/polled/api/v1/authorization_code', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.error) {
-          localStorage.setItem("accessToken", data.access_token);
-          localStorage.setItem("refreshToken", data.refresh_token);
-          fetch("https://wokki20.nl/polled/api/v1/profile", {
-            method: "GET",
-            headers: {
-              "Authorization": "Bearer " + data.access_token
-            }
-          })
-          .then(response => response.json())
-          .then(profileData => {
-            if (profileData.status === "success") {
-              localStorage.setItem("username", profileData.profile.username);
-            }
-          });
-        }
-      });
     }
   </script>
 </body>
