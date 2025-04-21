@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cool Website - Home</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+      padding: 20px;
+    }
+    .button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      font-size: 1.2rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Welcome to the Cool Website</h1>
+  <p>Click below to send a video call request to your friend:</p>
+  
+  <input type="text" id="targetUser" placeholder="Enter target username" />
+  <button class="button" onclick="initiateCall()">Send Call Request</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+      authDomain: "coolwebsitechat.firebaseapp.com",
+      databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+      projectId: "coolwebsitechat",
+      storageBucket: "coolwebsitechat.appspot.com",
+      messagingSenderId: "341962893234",
+      appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function initiateCall() {
+      const localUser = localStorage.getItem("username");
+      const targetUser = document.getElementById("targetUser").value.trim();
+      if (!localUser || !targetUser) {
+        alert("Please enter a valid target username!");
+        return;
+      }
+
+      // Generate a unique call ID
+      const callId = generateCallId();
+
+      // Generate the call URL
+      const callUrl = `https://your-website.com/video-call.html?callId=${callId}`;
+
+      // Save the call request with the URL to Firebase
+      db.ref(`calls/${targetUser}`).set({
+        from: localUser,
+        callUrl: callUrl
+      });
+
+      alert(`Call request sent to ${targetUser}. They can join by clicking the link: ${callUrl}`);
+    }
+
+    function generateCallId() {
+      return 'call-' + Math.random().toString(36).substr(2, 9); // Simple unique ID
+    }
+  </script>
+
+</body>
+</html>
