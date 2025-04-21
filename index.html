@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cool Website</title>
 
-  <!-- Firebase SDK (v9+ recommended) -->
+  <!-- Firebase SDK (v9+) -->
   <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database.js"></script>
 
@@ -25,11 +25,11 @@
       font-size: 3rem;
     }
     .button {
-      padding: 10px 20px;
+      padding: 15px 30px;
       background: #ff6600;
       color: white;
       border: none;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       border-radius: 5px;
       transition: 0.3s;
       cursor: pointer;
@@ -50,7 +50,7 @@
     }
     .message {
       background: #444;
-      padding: 5px;
+      padding: 10px;
       margin: 5px 0;
       border-radius: 5px;
     }
@@ -59,53 +59,22 @@
       cursor: pointer;
       margin-left: 10px;
     }
-    #videoChat {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #111;
-      padding: 20px;
-      border-radius: 10px;
-      z-index: 9999;
-    }
-    video {
-      width: 300px;
-      height: 200px;
-      margin: 10px;
-    }
-    .username-container {
-      margin: 20px;
-    }
   </style>
 </head>
 <body>
-  <div class="nav">
-    <a href="#" onclick="showHome()">Home</a>
-    <a href="#" onclick="showGaming()">Gaming</a>
-    <a href="#" onclick="showChat()">Chat</a>
-    <a href="#" onclick="login()">Login</a>
-  </div>
-
   <div id="content" class="container">
     <h1>Welcome to My Cool Website</h1>
     <p>Click the buttons above to explore the site!</p>
-    <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
+    <button class="button" onclick="showHome()">Home</button>
+    <button class="button" onclick="showGaming()">Gaming</button>
+    <button class="button" onclick="showChat()">Chat</button>
   </div>
 
-  <div id="videoChat">
-    <video id="localVideo" autoplay muted></video>
-    <video id="remoteVideo" autoplay></video>
-    <br>
-    <button class="button" onclick="endCall()">End Call</button>
-  </div>
-
-  <!-- Username Input -->
-  <div id="usernamePrompt" class="username-container" style="display: none;">
-    <h2>Please enter your username:</h2>
-    <input type="text" id="usernameInput" placeholder="Enter username" />
-    <button class="button" onclick="saveUsername()">Save Username</button>
+  <div id="chatContent" style="display: none;">
+    <h1>Chat Room</h1>
+    <div class="chat-box" id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button class="button" onclick="sendMessage()">Send</button>
   </div>
 
   <script>
@@ -123,40 +92,18 @@
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Example bad words list
-    const badWords = ["nigga","shit","cunt","pussy","retard","nigger","nword","asshole"];
-
-    // Call and login buttons
-    const clientId = "9504be431db31b01c4c1738b6edff281";
-    const redirectUri = encodeURIComponent("https://nathanuk1231.github.io/meganathan/");
-
-    // Check for username prompt
-    if (!localStorage.getItem("username")) {
-      document.getElementById("usernamePrompt").style.display = "block";
-    } else {
-      loadMessages();
-    }
-
-    // Function to save username
-    function saveUsername() {
-      const username = document.getElementById("usernameInput").value.trim();
-      if (username) {
-        localStorage.setItem("username", username);
-        document.getElementById("usernamePrompt").style.display = "none";
-        loadMessages();
-      }
-    }
-
-    // Function to show home content
+    // Show home content
     function showHome() {
       document.getElementById("content").innerHTML = `
         <h1>Welcome to My Cool Website</h1>
         <p>Click the buttons above to explore the site!</p>
-        <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
+        <button class="button" onclick="showHome()">Home</button>
+        <button class="button" onclick="showGaming()">Gaming</button>
+        <button class="button" onclick="showChat()">Chat</button>
       `;
     }
 
-    // Function to show gaming content
+    // Show gaming content
     function showGaming() {
       document.getElementById("content").innerHTML = `
         <h1>Gaming Section</h1>
@@ -164,41 +111,24 @@
       `;
     }
 
-    // Function to show chat content
+    // Show chat content
     function showChat() {
-      document.getElementById("content").innerHTML = `
-        <h1>Chat Room</h1>
-        <div class="chat-box" id="chatBox"></div>
-        <input type="text" id="messageInput" placeholder="Type a message..." />
-        <button class="button" onclick="sendMessage()">Send</button>
-      `;
+      document.getElementById("content").style.display = "none";
+      document.getElementById("chatContent").style.display = "block";
       loadMessages();
     }
 
-    // Function to send a message
+    // Send a message
     function sendMessage() {
-      const user = localStorage.getItem("username");
       const text = document.getElementById("messageInput").value.trim();
-
-      if (!user || !text) return;
-
-      const messageObj = { name: user, text: filterMessage(text) };
-      db.ref("messages").push(messageObj);
-
-      document.getElementById("messageInput").value = "";
+      if (text) {
+        const message = { text: text };
+        db.ref("messages").push(message);
+        document.getElementById("messageInput").value = "";
+      }
     }
 
-    // Message filtering (bad words)
-    function filterMessage(text) {
-      let filtered = text;
-      badWords.forEach(word => {
-        const regex = new RegExp(word, 'gi');
-        filtered = filtered.replace(regex, '*'.repeat(word.length));
-      });
-      return filtered;
-    }
-
-    // Function to load messages
+    // Load messages from Firebase
     function loadMessages() {
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML = "";
@@ -206,43 +136,12 @@
       db.ref("messages").off();
       db.ref("messages").on("child_added", snapshot => {
         const msg = snapshot.val();
-        const msgDiv = document.createElement("div");
-        msgDiv.className = "message";
-        msgDiv.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+        messageDiv.textContent = msg.text;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
       });
-    }
-
-    // Function to initiate a video call
-    function initiateCall(targetUser) {
-      const localUser = localStorage.getItem("username");
-      if (!localUser || !targetUser) return;
-      db.ref(`calls/${targetUser}`).set({ from: localUser });
-      alert("Call request sent to " + targetUser);
-    }
-
-    // Function to start a video call
-    function startVideoCall() {
-      document.getElementById("videoChat").style.display = "block";
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-        document.getElementById("localVideo").srcObject = stream;
-      });
-    }
-
-    // Function to end the call
-    function endCall() {
-      document.getElementById("videoChat").style.display = "none";
-      const localVideo = document.getElementById("localVideo");
-      const remoteVideo = document.getElementById("remoteVideo");
-      localVideo.srcObject.getTracks().forEach(track => track.stop());
-      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-    }
-
-    // Function to login
-    function login() {
-      const url = "https://wokki20.nl/polled/api/v1/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
-      window.location.href = url;
     }
   </script>
 </body>
