@@ -82,10 +82,10 @@
 </head>
 <body>
   <div class="nav">
-    <a onclick="showHome()">Home</a>
-    <a onclick="showGaming()">Gaming</a>
-    <a onclick="showChat()">Chat</a>
-    <a onclick="login()">Login</a>
+    <a href="#" onclick="showHome()">Home</a>
+    <a href="#" onclick="showGaming()">Gaming</a>
+    <a href="#" onclick="showChat()">Chat</a>
+    <a href="#" onclick="login()">Login</a>
   </div>
 
   <div id="content" class="container">
@@ -98,17 +98,18 @@
     <video id="localVideo" autoplay muted></video>
     <video id="remoteVideo" autoplay></video>
     <br>
-    <button onclick="endCall()">End Call</button>
+    <button class="button" onclick="endCall()">End Call</button>
   </div>
 
   <!-- Username Input -->
   <div id="usernamePrompt" class="username-container" style="display: none;">
     <h2>Please enter your username:</h2>
     <input type="text" id="usernameInput" placeholder="Enter username" />
-    <button onclick="saveUsername()">Save Username</button>
+    <button class="button" onclick="saveUsername()">Save Username</button>
   </div>
 
   <script>
+    // Firebase initialization (v9+)
     const firebaseConfig = {
       apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
       authDomain: "coolwebsitechat.firebaseapp.com",
@@ -122,18 +123,21 @@
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const badWords = ["nigga","shit","cunt","pussy","retard","nigger","nword","asshole","alass","ass","finger","latina","poo","wee","porn","gay","prick","penis","bollocks","bastard","bloody","dick","pillock","frigging","bitch","crap","slapper","arse","dork","nonce","tits","moron","cretin"];
+    // Example bad words list
+    const badWords = ["nigga","shit","cunt","pussy","retard","nigger","nword","asshole"];
 
+    // Call and login buttons
     const clientId = "9504be431db31b01c4c1738b6edff281";
     const redirectUri = encodeURIComponent("https://nathanuk1231.github.io/meganathan/");
 
-    // Show prompt for username if not set
+    // Check for username prompt
     if (!localStorage.getItem("username")) {
       document.getElementById("usernamePrompt").style.display = "block";
     } else {
       loadMessages();
     }
 
+    // Function to save username
     function saveUsername() {
       const username = document.getElementById("usernameInput").value.trim();
       if (username) {
@@ -143,6 +147,58 @@
       }
     }
 
+    // Function to show home content
+    function showHome() {
+      document.getElementById("content").innerHTML = `
+        <h1>Welcome to My Cool Website</h1>
+        <p>Click the buttons above to explore the site!</p>
+        <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" alt="Cute Cat" />
+      `;
+    }
+
+    // Function to show gaming content
+    function showGaming() {
+      document.getElementById("content").innerHTML = `
+        <h1>Gaming Section</h1>
+        <iframe src="https://chromedino.com/" width="800" height="400" style="border:none;"></iframe>
+      `;
+    }
+
+    // Function to show chat content
+    function showChat() {
+      document.getElementById("content").innerHTML = `
+        <h1>Chat Room</h1>
+        <div class="chat-box" id="chatBox"></div>
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button class="button" onclick="sendMessage()">Send</button>
+      `;
+      loadMessages();
+    }
+
+    // Function to send a message
+    function sendMessage() {
+      const user = localStorage.getItem("username");
+      const text = document.getElementById("messageInput").value.trim();
+
+      if (!user || !text) return;
+
+      const messageObj = { name: user, text: filterMessage(text) };
+      db.ref("messages").push(messageObj);
+
+      document.getElementById("messageInput").value = "";
+    }
+
+    // Message filtering (bad words)
+    function filterMessage(text) {
+      let filtered = text;
+      badWords.forEach(word => {
+        const regex = new RegExp(word, 'gi');
+        filtered = filtered.replace(regex, '*'.repeat(word.length));
+      });
+      return filtered;
+    }
+
+    // Function to load messages
     function loadMessages() {
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML = "";
@@ -152,30 +208,13 @@
         const msg = snapshot.val();
         const msgDiv = document.createElement("div");
         msgDiv.className = "message";
-
-        let displayName = msg.name;
-        if (msg.name === 'nathanasd123') {
-          displayName += ' 👑';
-        }
-
-        msgDiv.innerHTML = `<strong>${displayName}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100" />` : ""}`;
-
-        if (localStorage.getItem("username") === msg.name || localStorage.getItem("username") === "nathanasd123") {
-          msgDiv.innerHTML += ` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
-        }
-
-        // Video Call Button
-        if (msg.name !== localStorage.getItem("username")) {
-          msgDiv.innerHTML += ` <button onclick="initiateCall('${msg.name}')">Call 📞</button>`;
-        }
-
+        msgDiv.innerHTML = `<strong>${msg.name}:</strong> ${msg.text}`;
         chatBox.appendChild(msgDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
-
-      db.ref("messages").on("child_removed", () => loadMessages());
     }
 
+    // Function to initiate a video call
     function initiateCall(targetUser) {
       const localUser = localStorage.getItem("username");
       if (!localUser || !targetUser) return;
@@ -183,39 +222,24 @@
       alert("Call request sent to " + targetUser);
     }
 
-    // Check for incoming calls
-    setInterval(() => {
-      const localUser = localStorage.getItem("username");
-      if (!localUser) return;
-      db.ref(`calls/${localUser}`).once("value", snapshot => {
-        const data = snapshot.val();
-        if (data && data.from) {
-          if (confirm(`Incoming call from ${data.from}. Accept?`)) {
-            startVideoCall();
-          }
-          db.ref(`calls/${localUser}`).remove();
-        }
-      });
-    }, 3000);
-
-    let localStream;
+    // Function to start a video call
     function startVideoCall() {
       document.getElementById("videoChat").style.display = "block";
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-        localStream = stream;
         document.getElementById("localVideo").srcObject = stream;
-        // For demo: show local video only
-        document.getElementById("remoteVideo").srcObject = stream;
       });
     }
 
+    // Function to end the call
     function endCall() {
       document.getElementById("videoChat").style.display = "none";
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
+      const localVideo = document.getElementById("localVideo");
+      const remoteVideo = document.getElementById("remoteVideo");
+      localVideo.srcObject.getTracks().forEach(track => track.stop());
+      remoteVideo.srcObject.getTracks().forEach(track => track.stop());
     }
 
+    // Function to login
     function login() {
       const url = "https://wokki20.nl/polled/api/v1/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=" + redirectUri;
       window.location.href = url;
@@ -223,4 +247,3 @@
   </script>
 </body>
 </html>
-
