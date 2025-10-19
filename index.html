@@ -95,15 +95,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
-apiKey:"AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-authDomain:"coolwebsitechat.firebaseapp.com",
-databaseURL:"https://coolwebsitechat-default-rtdb.firebaseio.com",
-projectId:"coolwebsitechat",
-storageBucket:"coolwebsitechat.appspot.com",
-messagingSenderId:"341962893234",
-appId:"1:341962893234:web:8beb70143eb770931326ab"
+  apiKey:"AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+  authDomain:"coolwebsitechat.firebaseapp.com",
+  databaseURL:"https://coolwebsitechat-default-rtdb.firebaseio.com",
+  projectId:"coolwebsitechat",
+  storageBucket:"coolwebsitechat.appspot.com",
+  messagingSenderId:"341962893234",
+  appId:"1:341962893234:web:8beb70143eb770931326ab"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -112,46 +111,22 @@ const adminEmail = "nathanjlloyd123@gmail.com";
 let currentUser = null;
 const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
 
-// Filter bad words
 function filterMessage(text){let f=text;badWords.forEach(w=>{f=f.replace(new RegExp(w,'gi'),"*".repeat(w.length))});return f;}
 
-// Sections
-function showHome(){
-document.getElementById("content").innerHTML=`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`;
-}
-
-function showGaming(){
-document.getElementById("content").innerHTML=`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`;
-}
-
-function showMusic(){
-document.getElementById("content").innerHTML=`<h1>🎶 Music Jukebox</h1>
-<input id="searchInput" type="text" placeholder="Enter a song...">
-<button class="button" onclick="searchAndPlay()">Search & Play</button>
-<div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`;
-}
-
-function searchAndPlay(){
-const query=document.getElementById("searchInput").value.trim();
-if(!query) return;
-const searchQuery=query.replace(/\s+/g,'+');
-fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
-.then(res=>res.text())
-.then(html=>{const match=html.match(/"videoId":"(.*?)"/);if(match&&match[1]){document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;}else alert("No video found.")})
-.catch(e=>alert("Failed to load video."));}
+function showHome(){document.getElementById("content").innerHTML=`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`;}
+function showGaming(){document.getElementById("content").innerHTML=`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`;}
+function showMusic(){document.getElementById("content").innerHTML=`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..."><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`;}
+function searchAndPlay(){const query=document.getElementById("searchInput").value.trim();if(!query) return;const searchQuery=query.replace(/\s+/g,'+');fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`).then(res=>res.text()).then(html=>{const match=html.match(/"videoId":"(.*?)"/);if(match&&match[1]){document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`; } else alert("No video found.") }).catch(e=>alert("Failed to load video."));}
 
 // Chat
 function showChat(){
-document.getElementById("content").innerHTML=`<h1>Chat Room</h1>
-<div class="chat-box" id="chatBox"></div>
-<input type="text" id="messageInput" placeholder="Type a message...">
-<input type="file" id="imageInput" accept="image/*">
-<button class="button" onclick="sendMessage()">Send</button>`;
+document.getElementById("content").innerHTML=`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`;
 loadMessages();
 }
 
 function sendMessage(){
-const user=currentUser?currentUser.displayName:"Guest";
+if(!currentUser) return alert("Please login first");
+const user=currentUser.displayName; 
 const text=document.getElementById("messageInput").value.trim();
 const file=document.getElementById("imageInput").files[0];
 if(!text&&!file) return;
@@ -167,11 +142,9 @@ const chatBox=document.getElementById("chatBox");chatBox.innerHTML="";
 const messagesRef=ref(db,"messages");
 onChildAdded(messagesRef,snap=>{
 const msg=snap.val(),key=snap.key;
-const div=document.createElement("div");
-div.className="message";
+const div=document.createElement("div");div.className="message";
 div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""}${msg.image?`<br><img src="${msg.image}" width="100"/>`:""}`;
-if(currentUser&&currentUser.email===adminEmail){
-const del=document.createElement("span");del.className="delete-button";del.innerText="✖";del.onclick=()=>remove(ref(db,"messages/"+key));div.appendChild(del);}
+if(currentUser&&currentUser.email===adminEmail){const del=document.createElement("span");del.className="delete-button";del.innerText="✖";del.onclick=()=>remove(ref(db,"messages/"+key));div.appendChild(del);}
 chatBox.appendChild(div);chatBox.scrollTop=chatBox.scrollHeight;
 });
 }
@@ -179,20 +152,26 @@ chatBox.appendChild(div);chatBox.scrollTop=chatBox.scrollHeight;
 // Google login
 function googleLogin(){
 const provider=new GoogleAuthProvider();
-signInWithPopup(auth,provider)
-.then(res=>{currentUser=res.user;alert("Logged in as "+currentUser.displayName);showChat();})
-.catch(e=>alert("Login failed: "+e.message));
+signInWithPopup(auth,provider).then(res=>{currentUser=res.user;alert("Logged in as "+currentUser.displayName);showChat();}).catch(e=>alert("Login failed: "+e.message));
 }
 
 onAuthStateChanged(auth,user=>{currentUser=user?user:null;});
+
+// Make functions accessible to HTML
+window.showHome = showHome;
+window.showGaming = showGaming;
+window.showChat = showChat;
+window.showMusic = showMusic;
+window.googleLogin = googleLogin;
+
 </script>
 
 <!-- Particles.js library -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
-// Initialize particles
-particlesJS("particles-js", {
-"particles":{"number":{"value":80},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2,"direction":"none"}},"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},"modes":{"repulse":{"distance":100},"push":{"particles_nb":4}}},"retina_detect":true
+particlesJS("particles-js",{
+"particles":{"number":{"value":80},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2}}},
+"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},"modes":{"repulse":{"distance":100},"push":{"particles_nb":4}}},"retina_detect":true
 });
 </script>
 </body>
