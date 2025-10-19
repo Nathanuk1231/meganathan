@@ -7,30 +7,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 
 <style>
-/* Reset and body */
+/* Reset & Body */
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Orbitron',sans-serif;background:#000;color:#eaffea;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;position:relative;}
-
-/* Particle background canvas */
 #particles-js{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
 
 /* Navigation */
-.nav{position:fixed;top:20px;display:flex;gap:30px;justify-content:center;width:90%;
-background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);
-border-radius:50px;padding:15px 35px;backdrop-filter:blur(30px) saturate(200%);
-box-shadow:0 10px 35px rgba(0,255,120,0.3);z-index:100;}
+.nav{position:fixed;top:20px;display:flex;gap:30px;justify-content:center;width:90%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:15px 35px;backdrop-filter:blur(30px) saturate(200%);box-shadow:0 10px 35px rgba(0,255,120,0.3);z-index:100;}
 .nav a{color:#aaffaa;text-decoration:none;font-size:1.2rem;transition:0.3s;cursor:pointer;position:relative;}
 .nav a::after{content:"";position:absolute;bottom:-5px;left:0;width:0;height:2px;background:#00ff88;transition:0.3s;}
 .nav a:hover::after{width:100%;}
 .nav a:hover{color:#00ff88;text-shadow:0 0 15px #00ff88;}
 
 /* Container */
-.container{margin-top:140px;padding:50px;background:rgba(255,255,255,0.05);
-border:1px solid rgba(255,255,255,0.15);border-radius:30px;backdrop-filter:blur(35px) saturate(250%);
-box-shadow:0 0 60px rgba(0,255,120,0.25);width:90%;max-width:1000px;text-align:center;transition: all 0.4s ease;}
-.container:hover{box-shadow:0 0 80px rgba(0,255,120,0.4);}
+.container{margin-top:140px;padding:50px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:30px;backdrop-filter:blur(35px) saturate(250%);box-shadow:0 0 60px rgba(0,255,120,0.25);width:90%;max-width:1000px;text-align:center;transition: all 0.6s ease;opacity:0;transform:translateY(20px);}
+.container.active{opacity:1;transform:translateY(0);}
 
-/* Text & headings */
+/* Headings */
 h1{font-size:3rem;margin-bottom:20px;color:#b8ffb8;text-shadow:0 0 25px rgba(0,255,80,0.5);}
 p{font-size:1.2rem;color:#d6ffd6;line-height:1.5;}
 
@@ -39,26 +32,20 @@ img{border-radius:25px;margin-top:20px;box-shadow:0 0 30px rgba(0,255,120,0.3);t
 img:hover{transform:scale(1.05);box-shadow:0 0 45px rgba(0,255,120,0.5);}
 
 /* Buttons */
-.button{padding:12px 30px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.25);
-color:#aaffaa;border-radius:20px;font-size:1.2rem;cursor:pointer;transition:all 0.4s ease;
-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 5px 20px rgba(0,255,100,0.25);}
+.button{padding:12px 30px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.25);color:#aaffaa;border-radius:20px;font-size:1.2rem;cursor:pointer;transition:all 0.4s ease;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 5px 20px rgba(0,255,100,0.25);}
 .button:hover{background:rgba(255,255,255,0.12);color:#00ff88;box-shadow:0 0 35px rgba(0,255,120,0.5);transform:scale(1.05);}
 
 /* Chat */
-.chat-box{width:100%;height:400px;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.12);
-border-radius:30px;overflow-y:auto;padding:20px;margin:25px 0;box-shadow:inset 0 0 35px rgba(0,255,100,0.12);}
+.chat-box{width:100%;height:400px;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.12);border-radius:30px;overflow-y:auto;padding:20px;margin:25px 0;box-shadow:inset 0 0 35px rgba(0,255,100,0.12);}
 .chat-box::-webkit-scrollbar{width:10px;}
 .chat-box::-webkit-scrollbar-thumb{background:rgba(0,255,100,0.3);border-radius:10px;}
-.message{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
-border-radius:15px;padding:12px;margin:12px 0;color:#eaffea;text-align:left;position:relative;
-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 0 20px rgba(0,255,120,0.2);}
+.message{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:15px;padding:12px;margin:12px 0;color:#eaffea;text-align:left;position:relative;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 0 20px rgba(0,255,120,0.2);}
 .message strong{color:#00ff80;}
 .delete-button{color:#ff4d4d;cursor:pointer;position:absolute;right:15px;top:15px;font-size:1.2rem;transition:0.3s;}
 .delete-button:hover{transform:scale(1.2);}
 
 /* Inputs */
-input[type="text"],input[type="file"]{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:#eaffea;
-padding:12px;border-radius:20px;outline:none;margin:8px;width:80%;max-width:450px;transition:all 0.4s ease;}
+input[type="text"],input[type="file"]{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:#eaffea;padding:12px;border-radius:20px;outline:none;margin:8px;width:80%;max-width:450px;transition:all 0.4s ease;}
 input[type="text"]:focus{box-shadow:0 0 25px rgba(0,255,100,0.4);transform:scale(1.02);}
 
 /* Iframe */
@@ -72,7 +59,7 @@ iframe:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(0,255,120,0.35);}
 </head>
 <body>
 
-<!-- Particles background -->
+<!-- Particles -->
 <div id="particles-js"></div>
 
 <div class="nav">
@@ -83,13 +70,12 @@ iframe:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(0,255,120,0.35);}
 <a onclick="googleLogin()">Admin Login</a>
 </div>
 
-<div id="content" class="container">
+<div id="content" class="container active">
 <h1>Welcome to My Cool Website</h1>
 <p>Click the buttons above to explore the site!</p>
 <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>
 </div>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
@@ -109,69 +95,51 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 const adminEmail = "nathanjlloyd123@gmail.com";
 let currentUser = null;
-const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
+let loginInProgress = false;
 
+const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
 function filterMessage(text){let f=text;badWords.forEach(w=>{f=f.replace(new RegExp(w,'gi'),"*".repeat(w.length))});return f;}
 
-function showHome(){document.getElementById("content").innerHTML=`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`;}
-function showGaming(){document.getElementById("content").innerHTML=`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`;}
-function showMusic(){document.getElementById("content").innerHTML=`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..."><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`;}
-function searchAndPlay(){const query=document.getElementById("searchInput").value.trim();if(!query) return;const searchQuery=query.replace(/\s+/g,'+');fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`).then(res=>res.text()).then(html=>{const match=html.match(/"videoId":"(.*?)"/);if(match&&match[1]){document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`; } else alert("No video found.") }).catch(e=>alert("Failed to load video."));}
+// Functions
+function showHome(){switchContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`);}
+function showGaming(){switchContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`);}
+function showMusic(){switchContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..."><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
+function showChat(){switchContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`); loadMessages(); }
+
+function switchContent(html){const c=document.getElementById("content");c.classList.remove("active");setTimeout(()=>{c.innerHTML=html;c.classList.add("active");},200);}
+
+// Music
+function searchAndPlay(){const query=document.getElementById("searchInput").value.trim();if(!query)return;const sq=query.replace(/\s+/g,'+');fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${sq}`).then(res=>res.text()).then(html=>{const m=html.match(/"videoId":"(.*?)"/);if(m&&m[1]){document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0`;}else alert("No video found.");}).catch(e=>alert("Failed to load video."));}
 
 // Chat
-function showChat(){
-document.getElementById("content").innerHTML=`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`;
-loadMessages();
-}
+function sendMessage(){if(!currentUser)return alert("Please login first");const user=currentUser.displayName; const text=document.getElementById("messageInput").value.trim(); const file=document.getElementById("imageInput").files[0]; if(!text&&!file)return; let msg={name:user,text:filterMessage(text)}; if(file){const r=new FileReader();r.onloadend=()=>{msg.image=r.result;push(ref(db,"messages"),msg);}; r.readAsDataURL(file);} else push(ref(db,"messages"),msg); document.getElementById("messageInput").value="";document.getElementById("imageInput").value=""; }
 
-function sendMessage(){
-if(!currentUser) return alert("Please login first");
-const user=currentUser.displayName; 
-const text=document.getElementById("messageInput").value.trim();
-const file=document.getElementById("imageInput").files[0];
-if(!text&&!file) return;
-let msg={name:user,text:filterMessage(text)};
-if(file){const reader=new FileReader();reader.onloadend=()=>{msg.image=reader.result;push(ref(db,"messages"),msg);};reader.readAsDataURL(file);}
-else push(ref(db,"messages"),msg);
-document.getElementById("messageInput").value="";
-document.getElementById("imageInput").value="";
-}
-
-function loadMessages(){
-const chatBox=document.getElementById("chatBox");chatBox.innerHTML="";
-const messagesRef=ref(db,"messages");
-onChildAdded(messagesRef,snap=>{
-const msg=snap.val(),key=snap.key;
-const div=document.createElement("div");div.className="message";
-div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""}${msg.image?`<br><img src="${msg.image}" width="100"/>`:""}`;
-if(currentUser&&currentUser.email===adminEmail){const del=document.createElement("span");del.className="delete-button";del.innerText="✖";del.onclick=()=>remove(ref(db,"messages/"+key));div.appendChild(del);}
-chatBox.appendChild(div);chatBox.scrollTop=chatBox.scrollHeight;
-});
-}
+function loadMessages(){const cb=document.getElementById("chatBox");cb.innerHTML="";const mref=ref(db,"messages");onChildAdded(mref,snap=>{const msg=snap.val(),k=snap.key;const div=document.createElement("div");div.className="message";div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""}${msg.image?`<br><img src="${msg.image}" width="100"/>`:""}`;if(currentUser&&currentUser.email===adminEmail){const d=document.createElement("span");d.className="delete-button";d.innerText="✖";d.onclick=()=>remove(ref(db,"messages/"+k));div.appendChild(d);} cb.appendChild(div);cb.scrollTop=cb.scrollHeight;});}
 
 // Google login
 function googleLogin(){
+if(loginInProgress)return;
+loginInProgress=true;
 const provider=new GoogleAuthProvider();
-signInWithPopup(auth,provider).then(res=>{currentUser=res.user;alert("Logged in as "+currentUser.displayName);showChat();}).catch(e=>alert("Login failed: "+e.message));
+signInWithPopup(auth,provider).then(res=>{currentUser=res.user;alert("Logged in as "+currentUser.displayName);showChat();}).catch(e=>alert("Login failed: "+e.message)).finally(()=>loginInProgress=false);
 }
 
 onAuthStateChanged(auth,user=>{currentUser=user?user:null;});
 
-// Make functions accessible to HTML
+// Make functions accessible
 window.showHome = showHome;
 window.showGaming = showGaming;
 window.showChat = showChat;
 window.showMusic = showMusic;
 window.googleLogin = googleLogin;
-
 </script>
 
-<!-- Particles.js library -->
+<!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
 particlesJS("particles-js",{
-"particles":{"number":{"value":80},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2}}},
-"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},"modes":{"repulse":{"distance":100},"push":{"particles_nb":4}}},"retina_detect":true
+"particles":{"number":{"value":90},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.6},"size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.25,"width":1},"move":{"enable":true,"speed":2}}},
+"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},"modes":{"repulse":{"distance":120},"push":{"particles_nb":4}}},"retina_detect":true
 });
 </script>
 </body>
