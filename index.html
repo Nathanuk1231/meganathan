@@ -230,4 +230,63 @@ const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn",
 function filterMessage(text){
   let filtered = text;
   badWords.forEach(word => {
-    const regex =
+    const regex = new RegExp(word,'gi');
+    filtered = filtered.replace(regex,'*'.repeat(word.length));
+  });
+  return filtered;
+}
+
+function showChat(){
+  document.getElementById("content").innerHTML = `
+    <h1>Chat Room</h1>
+    <div class="chat-box" id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <input type="file" id="imageInput" accept="image/*">
+    <button class="button" onclick="sendMessage()">Send</button>
+  `;
+  loadChat(currentUser);
+}
+
+function sendMessage(){
+  if(!currentUser) { alert("Login first!"); return; }
+  const text = document.getElementById("messageInput").value.trim();
+  const imageFile = document.getElementById("imageInput").files[0];
+  if(!text && !imageFile) return;
+
+  let msgObj = {name: currentUser.displayName, text: filterMessage(text)};
+  if(imageFile){
+    const reader = new FileReader();
+    reader.onloadend = () => { msgObj.image = reader.result; db.ref("messages").push(msgObj); };
+    reader.readAsDataURL(imageFile);
+  } else db.ref("messages").push(msgObj);
+
+  document.getElementById("messageInput").value = "";
+  document.getElementById("imageInput").value = "";
+}
+
+function loadChat(user){
+  const chatBox = document.getElementById("chatBox");
+  if(!chatBox) return;
+  chatBox.innerHTML = "";
+  db.ref("messages").off();
+  db.ref("messages").on("child_added", snapshot => {
+    const msg = snapshot.val();
+    const key = snapshot.key;
+    const div = document.createElement("div");
+    div.className = "message";
+    div.innerHTML = `<strong>${msg.name}:</strong> ${msg.text || ""}${msg.image ? `<br><img src="${msg.image}" width="100">` : ""}`;
+    // Admin delete
+    if(user && user.displayName === adminGitHubUsername){
+      const delBtn = document.createElement("span");
+      delBtn.innerText = "Delete";
+      delBtn.className = "delete-button";
+      delBtn.onclick = () => db.ref("messages").child(key).remove();
+      div.appendChild(delBtn);
+    }
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+</script>
+</body>
+</html>
