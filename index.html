@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cool Website – Liquid Glass Ultra</title>
+<title>Cool Website – Ultra Liquid Glass</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
-/* Reset & Body */
+/* RESET & BODY */
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Orbitron',sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;
-background: linear-gradient(-45deg,#0d1f16,#001100,#001a00,#002200);background-size:400% 400%;animation:bgAnimation 20s ease infinite;
-color:#eaffea;position:relative;}
+background: linear-gradient(-45deg,#0d1f16,#001100,#001a00,#002200);background-size:400% 400%;animation:bgAnimation 20s ease infinite;color:#eaffea;position:relative;}
 @keyframes bgAnimation{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%;}}
 
 /* Particles container */
@@ -66,8 +65,6 @@ iframe:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(0,255,120,0.35);}
 </style>
 </head>
 <body>
-
-<!-- Particles -->
 <div id="particles-js"></div>
 
 <div class="nav">
@@ -84,8 +81,8 @@ iframe:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(0,255,120,0.35);}
 <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>
 </div>
 
+<!-- Firebase + JS -->
 <script type="module">
-document.addEventListener("DOMContentLoaded", () => {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -110,31 +107,89 @@ let loginInProgress = false;
 const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
 function filterMessage(text){let f=text;badWords.forEach(w=>{f=f.replace(new RegExp(w,'gi'),"*".repeat(w.length))});return f;}
 
+/* CONTENT SWITCH */
 function switchContent(html){const c=document.getElementById("content");c.classList.remove("active");setTimeout(()=>{c.innerHTML=html;c.classList.add("active");},200);}
 function showHome(){switchContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`);}
 function showGaming(){switchContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`);}
 function showMusic(){switchContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..."><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
-function showChat(){switchContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`); loadMessages(); }
+function showChat(){switchContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`); loadMessages();}
 
-function searchAndPlay(){const q=document.getElementById("searchInput").value.trim();if(!q)return;fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${q.replace(/\s+/g,'+')}`).then(r=>r.text()).then(html=>{const m=html.match(/"videoId":"(.*?)"/);if(m&&m[1])document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${m[1]}?autoplay=1&rel=0`; else alert("No video found.");}).catch(e=>alert("Failed to load video."));}
+/* CHAT FUNCTIONS */
+function sendMessage(){
+  const user=currentUser?currentUser.displayName:"Guest";
+  const text=document.getElementById("messageInput")?.value.trim();
+  const imageFile=document.getElementById("imageInput")?.files[0];
+  if(!user||(!text&&!imageFile))return;
+  let messageObj={name:user,text:filterMessage(text)};
+  if(imageFile){
+    const reader=new FileReader();
+    reader.onloadend=()=>{messageObj.image=reader.result;push(ref(db,"messages"),messageObj);}
+    reader.readAsDataURL(imageFile);
+  } else push(ref(db,"messages"),messageObj);
+  document.getElementById("messageInput").value="";
+  document.getElementById("imageInput").value="";
+}
 
-function sendMessage(){if(!currentUser)return alert("Please login first");const user=currentUser.displayName; const text=document.getElementById("messageInput").value.trim(); const file=document.getElementById("imageInput").files[0]; if(!text&&!file)return; let msg={name:user,text:filterMessage(text)}; if(file){const r=new FileReader();r.onloadend=()=>{msg.image=r.result;push(ref(db,"messages"),msg);}; r.readAsDataURL(file);} else push(ref(db,"messages"),msg); document.getElementById("messageInput").value="";document.getElementById("imageInput").value=""; }
+function loadMessages(){
+  const chatBox=document.getElementById("chatBox");
+  if(!chatBox) return;
+  chatBox.innerHTML="";
+  onChildAdded(ref(db,"messages"),snapshot=>{
+    const msg=snapshot.val();
+    const div=document.createElement("div");
+    div.className="message";
+    div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""}${msg.image?`<br><img src="${msg.image}" width="100"/>`:''}`;
+    if(currentUser && currentUser.email===adminEmail){
+      const del=document.createElement("span");
+      del.className="delete-button"; del.textContent="×";
+      del.onclick=()=>remove(ref(db,"messages/"+snapshot.key));
+      div.appendChild(del);
+    }
+    chatBox.appendChild(div);
+    chatBox.scrollTop=chatBox.scrollHeight;
+  });
+}
 
-function loadMessages(){const chatBox=document.getElementById("chatBox");if(!chatBox)return; chatBox.innerHTML=""; onChildAdded(ref(db,"messages"),snapshot=>{const msg=snapshot.val();const div=document.createElement("div");div.className="message";div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""} ${msg.image?`<br><img src="${msg.image}" width="100"/>`:''}`; if(currentUser && currentUser.email===adminEmail){const del=document.createElement("span");del.className="delete-button";del.textContent="×";del.onclick=()=>remove(ref(db,"messages/"+snapshot.key)); div.appendChild(del);} chatBox.appendChild(div); chatBox.scrollTop=chatBox.scrollHeight;}); }
+/* GOOGLE LOGIN */
+function googleLogin(){
+  if(loginInProgress) return;
+  loginInProgress=true;
+  const provider=new GoogleAuthProvider();
+  signInWithPopup(auth,provider).then(res=>{currentUser=res.user; alert("Logged in as "+currentUser.displayName);})
+  .catch(err=>{console.error(err);alert("Login failed");})
+  .finally(()=>loginInProgress=false);
+}
 
-function googleLogin(){if(loginInProgress)return; loginInProgress=true; const provider=new GoogleAuthProvider(); signInWithPopup(auth,provider).then(res=>{currentUser=res.user; alert("Logged in as "+currentUser.displayName);}).catch(err=>{console.error(err);alert("Login failed");}).finally(()=>loginInProgress=false); }
+/* YOUTUBE SEARCH */
+function searchAndPlay(){
+  const query=document.getElementById("searchInput")?.value.trim();
+  if(!query) return;
+  const searchQuery=query.replace(/\s+/g,'+');
+  fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
+    .then(res=>res.text())
+    .then(html=>{
+      const match=html.match(/"videoId":"(.*?)"/);
+      if(match && match[1]){
+        document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+      } else alert("No video found");
+    }).catch(err=>alert("Failed to load video"));
+}
 
-onAuthStateChanged(auth,user=>{currentUser=user; if(currentUser && document.getElementById("chatBox")) loadMessages(); });
+/* AUTH STATE LISTENER */
+onAuthStateChanged(auth,user=>{currentUser=user; if(user && document.getElementById("chatBox")) loadMessages();})
 
+/* EXPOSE TO WINDOW */
 window.showHome=showHome;
 window.showGaming=showGaming;
 window.showChat=showChat;
 window.showMusic=showMusic;
 window.googleLogin=googleLogin;
-window.searchAndPlay=searchAndPlay;
 window.sendMessage=sendMessage;
+window.searchAndPlay=searchAndPlay;
 
+/* INIT */
 showHome();
+
 });
 </script>
 
@@ -142,11 +197,11 @@ showHome();
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
 particlesJS("particles-js",{
-"particles":{"number":{"value":80},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},"line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2}}},
-"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},"modes":{"repulse":{"distance":120},"push":{"particles_nb":4}}},"retina_detect":true
+  "particles":{"number":{"value":100},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},
+  "line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2}}},
+  "interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},
+  "modes":{"repulse":{"distance":120},"push":{"particles_nb":4}}},"retina_detect":true
 });
 </script>
-
 </body>
 </html>
-
