@@ -25,7 +25,6 @@ body {
   align-items: center;
   overflow-x: hidden;
 }
-
 .nav {
   position: fixed;
   top: 20px;
@@ -52,7 +51,6 @@ body {
   color: #00ff80;
   text-shadow: 0 0 10px #00ff80;
 }
-
 .container {
   margin-top: 120px;
   padding: 30px;
@@ -67,10 +65,8 @@ body {
   text-align: center;
 }
 .container:hover { box-shadow: 0 0 50px rgba(0, 255, 120, 0.25); }
-
 h1 { font-size: 2.5rem; margin-bottom: 15px; color: #b8ffb8; text-shadow: 0 0 15px rgba(0,255,80,0.4);}
 p { font-size: 1.1rem; color: #d6ffd6; }
-
 .button {
   padding: 10px 25px;
   background: rgba(0, 255, 100, 0.15);
@@ -87,7 +83,6 @@ p { font-size: 1.1rem; color: #d6ffd6; }
   color: #00ff88;
   box-shadow: 0 0 20px rgba(0,255,100,0.3);
 }
-
 .chat-box {
   width: 100%;
   max-height: 350px;
@@ -110,12 +105,8 @@ p { font-size: 1.1rem; color: #d6ffd6; }
   word-wrap: break-word;
 }
 .message strong { color:#00ff80; }
-.delete-button {
-  color:#ff4d4d;
-  cursor:pointer;
-  float:right;
-}
-
+.delete-button { color:#ff4d4d; cursor:pointer; float:right; }
+.ban-button { color:#ff8800; cursor:pointer; float:right; margin-right:5px;}
 input[type="text"], input[type="file"] {
   background: rgba(0,255,100,0.08);
   border:1px solid rgba(0,255,100,0.25);
@@ -129,7 +120,6 @@ input[type="text"], input[type="file"] {
   transition:0.3s;
 }
 input[type="text"]:focus { box-shadow:0 0 15px rgba(0,255,100,0.3); }
-
 iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1);}
 @media(max-width:600px){
   .nav { flex-direction:column; padding:10px 20px;}
@@ -145,6 +135,7 @@ iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0
   <a onclick="showChat()">Chat</a>
   <a onclick="showMusic()">Music</a>
   <a onclick="login()">Login</a>
+  <a onclick="showAdmin()">Admin</a>
 </div>
 
 <div id="content" class="container">
@@ -168,31 +159,33 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 let adminEmail = "nathanjlloyd123@gmail.com";
+let bannedUsers = {};
 
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).then(result => {
+  auth.signInWithPopup(provider).then(result=>{
     const user = result.user;
-    if(user.email === adminEmail){
-      alert("Admin logged in");
-    }else{
-      alert("User logged in: "+user.email);
-    }
-  }).catch(err=>{
-    console.error(err);
-    alert("Login failed.");
-  });
+    if(user.email === adminEmail) alert("Admin logged in"); else alert("User logged in: "+user.email);
+  }).catch(err=>{console.error(err); alert("Login failed.")});
 }
 
-// Tabs
+function setContent(html){document.getElementById("content").innerHTML = html;}
 function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);}
 function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);}
 function showChat(){setContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..." /><input type="file" id="imageInput" accept="image/*" /><button class="button" onclick="sendMessage()">Send</button>`); loadMessages();}
 function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
-function setContent(html){document.getElementById("content").innerHTML = html;}
+
+function showAdmin(){
+  const user = auth.currentUser;
+  if(!user || user.email !== adminEmail){alert("Admin only"); return;}
+  setContent(`<h1>Admin Panel</h1>
+    <div class="chat-box" id="adminChat"></div>
+  `);
+  loadAdminMessages();
+}
 
 const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
-function filterMessage(text){let filtered = text; badWords.forEach(word=>{const regex = new RegExp(word,'gi'); filtered = filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
+function filterMessage(text){let filtered=text; badWords.forEach(word=>{const regex=new RegExp(word,'gi'); filtered=filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
 
 function sendMessage(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
@@ -200,13 +193,9 @@ function sendMessage(){
   const imageFile = document.getElementById("imageInput").files[0];
   if(!text && !imageFile) return;
   let messageObj = {name:user, text:filterMessage(text)};
-  if(imageFile){
-    const reader = new FileReader();
-    reader.onloadend = () => {messageObj.image = reader.result; db.ref("messages").push(messageObj);}
-    reader.readAsDataURL(imageFile);
-  } else db.ref("messages").push(messageObj);
-  document.getElementById("messageInput").value = "";
-  document.getElementById("imageInput").value = "";
+  if(imageFile){const reader=new FileReader(); reader.onloadend=()=>{messageObj.image=reader.result; db.ref("messages").push(messageObj);} ; reader.readAsDataURL(imageFile);}
+  else db.ref("messages").push(messageObj);
+  document.getElementById("messageInput").value=""; document.getElementById("imageInput").value="";
 }
 
 function loadMessages(){
@@ -215,29 +204,45 @@ function loadMessages(){
   db.ref("messages").off();
   db.ref("messages").on("child_added", snapshot=>{
     const msg = snapshot.val();
+    if(bannedUsers[msg.name]) return;
+    const msgDiv=document.createElement("div");
+    msgDiv.className="message";
+    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100"/>` : ""}`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop=chatBox.scrollHeight;
+  });
+}
+
+function loadAdminMessages(){
+  const chatBox = document.getElementById("adminChat");
+  chatBox.innerHTML="";
+  db.ref("messages").off();
+  db.ref("messages").on("child_added", snapshot=>{
+    const msg = snapshot.val();
     const msgDiv = document.createElement("div");
     msgDiv.className="message";
-    let adminControls = "";
-    if(auth.currentUser && auth.currentUser.email===adminEmail){
-      adminControls=` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
-    }
-    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image? `<br><img src="${msg.image}" width="100" />` : ""} ${adminControls}`;
+    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image? `<br><img src="${msg.image}" width="100"/>` : ""} 
+      <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>
+      <span class="ban-button" onclick="banUser('${msg.name}')">🚫</span>`;
     chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop=chatBox.scrollHeight;
   });
 }
 
 function deleteMessage(key){db.ref("messages/"+key).remove();}
+function banUser(name){bannedUsers[name]=true; alert(name+" banned");}
+
 function searchAndPlay(){
-  const query = document.getElementById("searchInput").value.trim();
+  const query=document.getElementById("searchInput").value.trim();
   if(!query) return;
-  const searchQuery = query.replace(/\s+/g,'+');
-  fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`).then(res=>res.text()).then(html=>{
-    const match = html.match(/"videoId":"(.*?)"/);
-    if(match && match[1]){
-      document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
-    }else alert("No video found.");
-  }).catch(err=>alert("Failed to load video."));
+  const searchQuery=query.replace(/\s+/g,'+');
+  fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
+    .then(res=>res.text())
+    .then(html=>{
+      const match=html.match(/"videoId":"(.*?)"/);
+      if(match && match[1]) document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+      else alert("No video found.");
+    }).catch(err=>alert("Failed to load video."));
 }
 </script>
 </body>
