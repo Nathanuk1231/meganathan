@@ -3,205 +3,242 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cool Website – Ultra Liquid Glass</title>
+<title>Cool Website – Liquid Glass</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
+
+<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
+
 <style>
-/* RESET & BODY */
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Orbitron',sans-serif;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;
-background: linear-gradient(-45deg,#0d1f16,#001100,#001a00,#002200);background-size:400% 400%;animation:bgAnimation 20s ease infinite;color:#eaffea;position:relative;}
-@keyframes bgAnimation{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%;}}
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: radial-gradient(circle at top left, #0d1f16 0%, #000 80%);
+  color: #eaffea;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
 
-/* Particles container */
-#particles-js{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+.nav {
+  position: fixed;
+  top: 20px;
+  background: rgba(0, 255, 85, 0.15);
+  border: 1px solid rgba(0, 255, 85, 0.3);
+  backdrop-filter: blur(25px) saturate(180%);
+  border-radius: 50px;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  z-index: 100;
+  box-shadow: 0 0 25px rgba(0, 255, 100, 0.3);
+  flex-wrap: wrap;
+}
+.nav a {
+  color: #aaffaa;
+  text-decoration: none;
+  font-size: 1.2rem;
+  cursor:pointer;
+  transition:0.3s;
+}
+.nav a:hover {
+  color: #00ff80;
+  text-shadow: 0 0 10px #00ff80;
+}
 
-/* Navigation */
-.nav{position:fixed;top:20px;display:flex;gap:25px;justify-content:center;width:90%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-border-radius:50px;padding:15px 35px;backdrop-filter:blur(25px) saturate(200%);box-shadow:0 10px 35px rgba(0,255,120,0.3);z-index:100;}
-.nav a{color:#aaffaa;text-decoration:none;font-size:1.2rem;transition:0.3s;cursor:pointer;position:relative;}
-.nav a::after{content:"";position:absolute;bottom:-5px;left:0;width:0;height:2px;background:#00ff88;transition:0.3s;}
-.nav a:hover::after{width:100%;}
-.nav a:hover{color:#00ff88;text-shadow:0 0 15px #00ff88;}
+.container {
+  margin-top: 120px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 100, 0.25);
+  border-radius: 30px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 40px rgba(0, 255, 100, 0.15);
+  transition: 0.3s;
+  width: 90%;
+  max-width: 900px;
+  text-align: center;
+}
+.container:hover { box-shadow: 0 0 50px rgba(0, 255, 120, 0.25); }
 
-/* Container */
-.container{margin-top:140px;padding:50px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-border-radius:30px;backdrop-filter:blur(35px) saturate(250%);box-shadow:0 0 60px rgba(0,255,120,0.25);width:90%;max-width:1000px;text-align:center;
-transition: all 0.6s ease;opacity:0;transform:translateY(20px);}
-.container.active{opacity:1;transform:translateY(0);}
+h1 { font-size: 2.5rem; margin-bottom: 15px; color: #b8ffb8; text-shadow: 0 0 15px rgba(0,255,80,0.4);}
+p { font-size: 1.1rem; color: #d6ffd6; }
 
-/* Headings */
-h1{font-size:3rem;margin-bottom:20px;color:#b8ffb8;text-shadow:0 0 25px rgba(0,255,80,0.5);}
-p{font-size:1.2rem;color:#d6ffd6;line-height:1.5;}
+.button {
+  padding: 10px 25px;
+  background: rgba(0, 255, 100, 0.15);
+  border: 1px solid rgba(0,255,100,0.4);
+  color: #aaffaa;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+.button:hover {
+  background: rgba(0,255,100,0.25);
+  color: #00ff88;
+  box-shadow: 0 0 20px rgba(0,255,100,0.3);
+}
 
-/* Images */
-img{border-radius:25px;margin-top:20px;box-shadow:0 0 30px rgba(0,255,120,0.3);transition:0.5s;}
-img:hover{transform:scale(1.05);box-shadow:0 0 45px rgba(0,255,120,0.5);}
+.chat-box {
+  width: 100%;
+  max-height: 350px;
+  background: rgba(0,0,0,0.4);
+  border:1px solid rgba(0,255,100,0.25);
+  border-radius:20px;
+  overflow-y:auto;
+  padding:10px;
+  margin:20px 0;
+  box-shadow: inset 0 0 15px rgba(0,255,100,0.1);
+}
+.message {
+  background: rgba(0,255,100,0.08);
+  border:1px solid rgba(0,255,100,0.2);
+  border-radius:10px;
+  padding:8px;
+  margin:8px 0;
+  color:#eaffea;
+  text-align:left;
+  word-wrap: break-word;
+}
+.message strong { color:#00ff80; }
+.delete-button {
+  color:#ff4d4d;
+  cursor:pointer;
+  float:right;
+}
 
-/* Buttons */
-.button{padding:12px 30px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.25);color:#aaffaa;border-radius:20px;
-font-size:1.2rem;cursor:pointer;transition:all 0.4s ease;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 5px 20px rgba(0,255,100,0.25);}
-.button:hover{background:rgba(255,255,255,0.12);color:#00ff88;box-shadow:0 0 35px rgba(0,255,120,0.5);transform:scale(1.05);}
+input[type="text"], input[type="file"] {
+  background: rgba(0,255,100,0.08);
+  border:1px solid rgba(0,255,100,0.25);
+  color:#eaffea;
+  padding:10px;
+  border-radius:10px;
+  outline:none;
+  margin:5px;
+  width:80%;
+  max-width:400px;
+  transition:0.3s;
+}
+input[type="text"]:focus { box-shadow:0 0 15px rgba(0,255,100,0.3); }
 
-/* Chat */
-.chat-box{width:100%;height:400px;background:rgba(0,0,0,0.15);border:1px solid rgba(255,255,255,0.12);border-radius:30px;overflow-y:auto;padding:20px;margin:25px 0;box-shadow:inset 0 0 35px rgba(0,255,100,0.12);}
-.chat-box::-webkit-scrollbar{width:10px;}
-.chat-box::-webkit-scrollbar-thumb{background:rgba(0,255,100,0.3);border-radius:10px;}
-.message{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:15px;padding:12px;margin:12px 0;color:#eaffea;text-align:left;position:relative;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 0 20px rgba(0,255,120,0.2);transition:0.3s;}
-.message strong{color:#00ff80;}
-.delete-button{color:#ff4d4d;cursor:pointer;position:absolute;right:15px;top:15px;font-size:1.2rem;transition:0.3s;}
-.delete-button:hover{transform:scale(1.2);}
-
-/* Inputs */
-input[type="text"],input[type="file"]{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:#eaffea;padding:12px;border-radius:20px;outline:none;margin:8px;width:80%;max-width:450px;transition:all 0.4s ease;}
-input[type="text"]:focus{box-shadow:0 0 25px rgba(0,255,100,0.4);transform:scale(1.02);}
-
-/* Iframe */
-iframe{border-radius:25px;border:1px solid rgba(255,255,255,0.1);box-shadow:0 0 40px rgba(0,255,120,0.2);transition:0.4s;}
-iframe:hover{transform:scale(1.02);box-shadow:0 0 50px rgba(0,255,120,0.35);}
-
-/* Responsive */
-@media(max-width:900px){iframe{width:100%;height:350px;}}
-@media(max-width:500px){.nav{flex-direction:column;gap:15px;padding:10px 15px;}.container{padding:25px;}}
+iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1);}
+@media(max-width:600px){
+  .nav { flex-direction:column; padding:10px 20px;}
+  .nav a { font-size:1rem; }
+  .container { padding:20px; }
+}
 </style>
 </head>
 <body>
-<div id="particles-js"></div>
-
 <div class="nav">
-<a onclick="showHome()">Home</a>
-<a onclick="showGaming()">Gaming</a>
-<a onclick="showChat()">Chat</a>
-<a onclick="showMusic()">Music</a>
-<a onclick="googleLogin()">Admin Login</a>
+  <a onclick="showHome()">Home</a>
+  <a onclick="showGaming()">Gaming</a>
+  <a onclick="showChat()">Chat</a>
+  <a onclick="showMusic()">Music</a>
+  <a onclick="login()">Login</a>
 </div>
 
-<div id="content" class="container active">
-<h1>Welcome to My Cool Website</h1>
-<p>Click the buttons above to explore the site!</p>
-<img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>
+<div id="content" class="container">
+  <h1>Welcome to My Cool Website</h1>
+  <p>Click the buttons above to explore the site!</p>
+  <img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>
 </div>
 
-<!-- Firebase + JS -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
+<script>
 const firebaseConfig = {
-apiKey:"AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
-authDomain:"coolwebsitechat.firebaseapp.com",
-databaseURL:"https://coolwebsitechat-default-rtdb.firebaseio.com",
-projectId:"coolwebsitechat",
-storageBucket:"coolwebsitechat.appspot.com",
-messagingSenderId:"341962893234",
-appId:"1:341962893234:web:8beb70143eb770931326ab"
+  apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
+  authDomain: "coolwebsitechat.firebaseapp.com",
+  databaseURL: "https://coolwebsitechat-default-rtdb.firebaseio.com",
+  projectId: "coolwebsitechat",
+  storageBucket: "coolwebsitechat.appspot.com",
+  messagingSenderId: "341962893234",
+  appId: "1:341962893234:web:c3b1ca2a1279bce71326ab"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-const adminEmail = "nathanjlloyd123@gmail.com";
-let currentUser = null;
-let loginInProgress = false;
+let adminEmail = "nathanjlloyd123@gmail.com";
 
-const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
-function filterMessage(text){let f=text;badWords.forEach(w=>{f=f.replace(new RegExp(w,'gi'),"*".repeat(w.length))});return f;}
-
-/* CONTENT SWITCH */
-function switchContent(html){const c=document.getElementById("content");c.classList.remove("active");setTimeout(()=>{c.innerHTML=html;c.classList.add("active");},200);}
-function showHome(){switchContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" alt="Cute Cat"/>`);}
-function showGaming(){switchContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="800" height="400"></iframe>`);}
-function showMusic(){switchContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..."><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
-function showChat(){switchContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..."><input type="file" id="imageInput" accept="image/*"><button class="button" onclick="sendMessage()">Send</button>`); loadMessages();}
-
-/* CHAT FUNCTIONS */
-function sendMessage(){
-  const user=currentUser?currentUser.displayName:"Guest";
-  const text=document.getElementById("messageInput")?.value.trim();
-  const imageFile=document.getElementById("imageInput")?.files[0];
-  if(!user||(!text&&!imageFile))return;
-  let messageObj={name:user,text:filterMessage(text)};
-  if(imageFile){
-    const reader=new FileReader();
-    reader.onloadend=()=>{messageObj.image=reader.result;push(ref(db,"messages"),messageObj);}
-    reader.readAsDataURL(imageFile);
-  } else push(ref(db,"messages"),messageObj);
-  document.getElementById("messageInput").value="";
-  document.getElementById("imageInput").value="";
-}
-
-function loadMessages(){
-  const chatBox=document.getElementById("chatBox");
-  if(!chatBox) return;
-  chatBox.innerHTML="";
-  onChildAdded(ref(db,"messages"),snapshot=>{
-    const msg=snapshot.val();
-    const div=document.createElement("div");
-    div.className="message";
-    div.innerHTML=`<strong>${msg.name}:</strong> ${msg.text||""}${msg.image?`<br><img src="${msg.image}" width="100"/>`:''}`;
-    if(currentUser && currentUser.email===adminEmail){
-      const del=document.createElement("span");
-      del.className="delete-button"; del.textContent="×";
-      del.onclick=()=>remove(ref(db,"messages/"+snapshot.key));
-      div.appendChild(del);
+function login(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result => {
+    const user = result.user;
+    if(user.email === adminEmail){
+      alert("Admin logged in");
+    }else{
+      alert("User logged in: "+user.email);
     }
-    chatBox.appendChild(div);
-    chatBox.scrollTop=chatBox.scrollHeight;
+  }).catch(err=>{
+    console.error(err);
+    alert("Login failed.");
   });
 }
 
-/* GOOGLE LOGIN */
-function googleLogin(){
-  if(loginInProgress) return;
-  loginInProgress=true;
-  const provider=new GoogleAuthProvider();
-  signInWithPopup(auth,provider).then(res=>{currentUser=res.user; alert("Logged in as "+currentUser.displayName);})
-  .catch(err=>{console.error(err);alert("Login failed");})
-  .finally(()=>loginInProgress=false);
+// Tabs
+function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);}
+function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);}
+function showChat(){setContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..." /><input type="file" id="imageInput" accept="image/*" /><button class="button" onclick="sendMessage()">Send</button>`); loadMessages();}
+function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
+function setContent(html){document.getElementById("content").innerHTML = html;}
+
+const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
+function filterMessage(text){let filtered = text; badWords.forEach(word=>{const regex = new RegExp(word,'gi'); filtered = filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
+
+function sendMessage(){
+  const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
+  const text = document.getElementById("messageInput").value.trim();
+  const imageFile = document.getElementById("imageInput").files[0];
+  if(!text && !imageFile) return;
+  let messageObj = {name:user, text:filterMessage(text)};
+  if(imageFile){
+    const reader = new FileReader();
+    reader.onloadend = () => {messageObj.image = reader.result; db.ref("messages").push(messageObj);}
+    reader.readAsDataURL(imageFile);
+  } else db.ref("messages").push(messageObj);
+  document.getElementById("messageInput").value = "";
+  document.getElementById("imageInput").value = "";
 }
 
-/* YOUTUBE SEARCH */
+function loadMessages(){
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML="";
+  db.ref("messages").off();
+  db.ref("messages").on("child_added", snapshot=>{
+    const msg = snapshot.val();
+    const msgDiv = document.createElement("div");
+    msgDiv.className="message";
+    let adminControls = "";
+    if(auth.currentUser && auth.currentUser.email===adminEmail){
+      adminControls=` <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>`;
+    }
+    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image? `<br><img src="${msg.image}" width="100" />` : ""} ${adminControls}`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+function deleteMessage(key){db.ref("messages/"+key).remove();}
 function searchAndPlay(){
-  const query=document.getElementById("searchInput")?.value.trim();
+  const query = document.getElementById("searchInput").value.trim();
   if(!query) return;
-  const searchQuery=query.replace(/\s+/g,'+');
-  fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`)
-    .then(res=>res.text())
-    .then(html=>{
-      const match=html.match(/"videoId":"(.*?)"/);
-      if(match && match[1]){
-        document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
-      } else alert("No video found");
-    }).catch(err=>alert("Failed to load video"));
+  const searchQuery = query.replace(/\s+/g,'+');
+  fetch(`https://corsproxy.io/?https://www.youtube.com/results?search_query=${searchQuery}`).then(res=>res.text()).then(html=>{
+    const match = html.match(/"videoId":"(.*?)"/);
+    if(match && match[1]){
+      document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+    }else alert("No video found.");
+  }).catch(err=>alert("Failed to load video."));
 }
-
-/* AUTH STATE LISTENER */
-onAuthStateChanged(auth,user=>{currentUser=user; if(user && document.getElementById("chatBox")) loadMessages();})
-
-/* EXPOSE TO WINDOW */
-window.showHome=showHome;
-window.showGaming=showGaming;
-window.showChat=showChat;
-window.showMusic=showMusic;
-window.googleLogin=googleLogin;
-window.sendMessage=sendMessage;
-window.searchAndPlay=searchAndPlay;
-
-/* INIT */
-showHome();
-
-});
-</script>
-
-<!-- Particles.js -->
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<script>
-particlesJS("particles-js",{
-  "particles":{"number":{"value":100},"color":{"value":"#00ff88"},"shape":{"type":"circle"},"opacity":{"value":0.5},"size":{"value":3},
-  "line_linked":{"enable":true,"distance":150,"color":"#00ff88","opacity":0.2,"width":1},"move":{"enable":true,"speed":2}}},
-  "interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"}},
-  "modes":{"repulse":{"distance":120},"push":{"particles_nb":4}}},"retina_detect":true
-});
 </script>
 </body>
 </html>
