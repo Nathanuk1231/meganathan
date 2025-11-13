@@ -17,13 +17,21 @@
 * { box-sizing: border-box; margin:0; padding:0; scroll-behavior:smooth; }
 body {
   font-family: 'Orbitron', sans-serif;
-  background: radial-gradient(circle at top left, #0d1f16 0%, #000 80%);
   color: #eaffea;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow-x: hidden;
+  background: linear-gradient(-45deg, #001a0d, #003319, #004d26, #00ff80);
+  background-size: 400% 400%;
+  animation: bgMove 20s ease infinite;
+}
+
+@keyframes bgMove {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
 }
 
 /* ===== NAVIGATION ===== */
@@ -31,21 +39,27 @@ body {
   position: fixed;
   top: 20px;
   background: rgba(0, 255, 85, 0.15);
-  border: 1px solid rgba(0, 255, 85, 0.3);
-  backdrop-filter: blur(25px) saturate(180%);
+  border: 2px solid rgba(0, 255, 85, 0.4);
   border-radius: 50px;
   padding: 15px 40px;
   display: flex;
   justify-content: center;
   gap: 20px;
   z-index: 100;
-  box-shadow: 0 0 25px rgba(0, 255, 100, 0.3);
+  box-shadow: 0 0 30px rgba(0, 255, 120, 0.4);
   flex-wrap: wrap;
+  backdrop-filter: blur(25px);
   transition: all 0.4s ease;
+  animation: glowEdge 6s linear infinite;
 }
 .nav.hide {
   top: -100px;
   opacity: 0;
+}
+@keyframes glowEdge {
+  0% { box-shadow: 0 0 25px rgba(0,255,120,0.4);}
+  50% { box-shadow: 0 0 50px rgba(0,255,180,0.7);}
+  100% { box-shadow: 0 0 25px rgba(0,255,120,0.4);}
 }
 .nav a {
   color: #aaffaa;
@@ -64,21 +78,18 @@ body {
   margin-top: 120px;
   padding: 30px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(0, 255, 100, 0.25);
+  border: 2px solid rgba(0, 255, 100, 0.25);
   border-radius: 30px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 0 40px rgba(0, 255, 100, 0.15);
   width: 90%;
   max-width: 900px;
   text-align: center;
-  animation: pulse 3s infinite;
-  transition: 0.3s;
+  animation: edgeFlow 5s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0, 255, 100, 0.2);
 }
-.container:hover { box-shadow: 0 0 60px rgba(0, 255, 120, 0.35); }
-
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 25px rgba(0,255,100,0.3); }
-  50% { box-shadow: 0 0 50px rgba(0,255,150,0.6); }
+@keyframes edgeFlow {
+  0%, 100% { box-shadow: 0 0 30px rgba(0,255,120,0.3);}
+  50% { box-shadow: 0 0 60px rgba(0,255,160,0.6);}
 }
 
 /* ===== BUTTONS ===== */
@@ -131,6 +142,16 @@ body {
   color: #00ff80;
   text-shadow: 0 0 5px #00ff80;
   margin-top: 5px;
+  min-height: 20px;
+}
+.typing-indicator span {
+  animation: typingDots 1.5s infinite;
+}
+@keyframes typingDots {
+  0% { opacity: 0; }
+  33% { opacity: 1; }
+  66% { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 /* ===== INPUTS ===== */
@@ -188,7 +209,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
-/* ===== GLOBALS ===== */
 let adminEmail = "nathanjlloyd123@gmail.com";
 let bannedUsers = {};
 let typingTimeout;
@@ -198,8 +218,8 @@ function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(result=>{
     const user = result.user;
-    if(user.email === adminEmail) alert("Admin logged in"); else alert("User logged in: "+user.email);
-  }).catch(err=>{console.error(err); alert("Login failed.")});
+    alert(user.email === adminEmail ? "Admin logged in" : "User logged in: "+user.email);
+  }).catch(()=>alert("Login failed."));
 }
 
 /* ===== CONTENT SWITCH ===== */
@@ -236,10 +256,14 @@ function sendMessage(){
   const imageFile = document.getElementById("imageInput").files[0];
   if(!text && !imageFile) return;
   let messageObj = {name:user, text:filterMessage(text)};
-  if(imageFile){const reader=new FileReader(); reader.onloadend=()=>{messageObj.image=reader.result; db.ref("messages").push(messageObj);} ; reader.readAsDataURL(imageFile);}
-  else db.ref("messages").push(messageObj);
-  document.getElementById("messageInput").value=""; document.getElementById("imageInput").value="";
-  db.ref("typing").remove(); // clear typing indicator
+  if(imageFile){
+    const reader=new FileReader();
+    reader.onloadend=()=>{messageObj.image=reader.result; db.ref("messages").push(messageObj);};
+    reader.readAsDataURL(imageFile);
+  } else db.ref("messages").push(messageObj);
+  document.getElementById("messageInput").value="";
+  document.getElementById("imageInput").value="";
+  db.ref("typing").remove();
 }
 
 function loadMessages(){
@@ -251,16 +275,24 @@ function loadMessages(){
     if(bannedUsers[msg.name]) return;
     const msgDiv=document.createElement("div");
     msgDiv.className="message";
+    msgDiv.id = snapshot.key;
     msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100"/>` : ""}`;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop=chatBox.scrollHeight;
   });
+  db.ref("messages").on("child_removed", snapshot=>{
+    const msgDiv = document.getElementById(snapshot.key);
+    if(msgDiv) msgDiv.remove();
+  });
 
-  // Typing indicator
   db.ref("typing").on("value", snap=>{
     const typingUser = snap.val();
     const indicator = document.getElementById("typingIndicator");
-    indicator.textContent = typingUser ? `${typingUser} is typing...` : "";
+    if(typingUser){
+      indicator.innerHTML = `${typingUser} is typing<span>.</span><span>.</span><span>.</span>`;
+    } else {
+      indicator.innerHTML = "";
+    }
   });
 }
 
@@ -273,19 +305,24 @@ function loadAdminMessages(){
     const msg = snapshot.val();
     const msgDiv = document.createElement("div");
     msgDiv.className="message";
+    msgDiv.id = snapshot.key;
     msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image? `<br><img src="${msg.image}" width="100"/>` : ""} 
       <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>
       <span class="ban-button" onclick="banUser('${msg.name}')">🚫</span>`;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop=chatBox.scrollHeight;
   });
+  db.ref("messages").on("child_removed", snapshot=>{
+    const msgDiv = document.getElementById(snapshot.key);
+    if(msgDiv) msgDiv.remove();
+  });
 }
 
-/* ===== ADMIN FUNCTIONS ===== */
+/* ===== ADMIN ACTIONS ===== */
 function deleteMessage(key){db.ref("messages/"+key).remove();}
 function banUser(name){bannedUsers[name]=true; alert(name+" banned");}
 
-/* ===== TYPING INDICATOR ===== */
+/* ===== TYPING ===== */
 function userTyping(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
   db.ref("typing").set(user);
@@ -293,7 +330,7 @@ function userTyping(){
   typingTimeout = setTimeout(()=>{db.ref("typing").remove();}, 2000);
 }
 
-/* ===== YOUTUBE SEARCH ===== */
+/* ===== YOUTUBE ===== */
 function searchAndPlay(){
   const query=document.getElementById("searchInput").value.trim();
   if(!query) return;
@@ -304,10 +341,10 @@ function searchAndPlay(){
       const match=html.match(/"videoId":"(.*?)"/);
       if(match && match[1]) document.getElementById("ytplayer").src=`https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
       else alert("No video found.");
-    }).catch(err=>alert("Failed to load video."));
+    }).catch(()=>alert("Failed to load video."));
 }
 
-/* ===== FLOATING NAV BAR ===== */
+/* ===== FLOATING NAV ===== */
 let lastScroll = 0;
 window.addEventListener('scroll', ()=>{
   const nav = document.getElementById('navbar');
