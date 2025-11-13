@@ -26,15 +26,12 @@ body {
   background: linear-gradient(-45deg, #001a0d, #003319, #004d26, #00ff80);
   background-size: 400% 400%;
   animation: bgMove 20s ease infinite;
-  transition: all 0.5s ease;
 }
 @keyframes bgMove {
-  0% {background-position: 0% 50%;}
-  50% {background-position: 100% 50%;}
-  100% {background-position: 0% 50%;}
+  0% {background-position:0% 50%;}
+  50% {background-position:100% 50%;}
+  100% {background-position:0% 50%;}
 }
-
-/* ===== NAVIGATION ===== */
 .nav {
   position: fixed;
   top: 20px;
@@ -49,10 +46,8 @@ body {
   box-shadow: 0 0 30px rgba(0, 255, 120, 0.4);
   flex-wrap: wrap;
   backdrop-filter: blur(25px);
-  transition: all 0.4s ease;
   animation: glowEdge 6s linear infinite;
 }
-.nav.hide { top:-100px; opacity:0; }
 @keyframes glowEdge {
   0% { box-shadow: 0 0 25px rgba(0,255,120,0.4);}
   50% { box-shadow: 0 0 50px rgba(0,255,180,0.7);}
@@ -60,8 +55,6 @@ body {
 }
 .nav a { color: #aaffaa; text-decoration: none; font-size: 1.2rem; cursor:pointer; transition:0.3s;}
 .nav a:hover { color: #00ff80; text-shadow: 0 0 10px #00ff80; }
-
-/* ===== CONTAINER ===== */
 .container {
   margin-top: 120px;
   padding: 30px;
@@ -80,8 +73,6 @@ body {
   0%,100% { box-shadow:0 0 30px rgba(0,255,120,0.3);}
   50% { box-shadow:0 0 60px rgba(0,255,160,0.6);}
 }
-
-/* ===== BUTTONS ===== */
 .button {
   padding:10px 25px;
   background: rgba(0,255,100,0.15);
@@ -92,16 +83,12 @@ body {
   cursor:pointer;
   transition: all 0.25s ease;
   backdrop-filter: blur(10px);
-  transform: perspective(400px) translateZ(0);
 }
 .button:hover {
   background: rgba(0,255,100,0.25);
   color:#00ff88;
   box-shadow:0 8px 20px rgba(0,255,100,0.4);
-  transform: perspective(400px) translateZ(10px);
 }
-
-/* ===== CHAT ===== */
 .chat-box {
   width:100%;
   max-height:350px;
@@ -131,8 +118,6 @@ body {
 @keyframes typingDots {
   0% { opacity:0; } 33% { opacity:1; } 66% { opacity:0; } 100% { opacity:0; }
 }
-
-/* ===== INPUTS ===== */
 input[type="text"], input[type="file"], select {
   background: rgba(0,255,100,0.08);
   border:1px solid rgba(0,255,100,0.25);
@@ -146,9 +131,7 @@ input[type="text"], input[type="file"], select {
   transition:0.3s;
 }
 input[type="text"]:focus, select:focus { box-shadow:0 0 15px rgba(0,255,100,0.3); }
-
 iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1); }
-
 @media(max-width:600px){
   .nav { flex-direction:column; padding:10px 20px;}
   .nav a { font-size:1rem; }
@@ -157,12 +140,12 @@ iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0
 </style>
 </head>
 <body>
-<div class="nav" id="navbar">
+
+<div class="nav">
   <a onclick="showHome()">Home</a>
   <a onclick="showGaming()">Gaming</a>
   <a onclick="showChat()">Chat</a>
   <a onclick="showMusic()">Music</a>
-  <a onclick="showAI()">AI Assistant</a>
   <a onclick="showThemes()">Themes</a>
   <a onclick="login()">Login</a>
   <a onclick="showAdmin()">Admin</a>
@@ -175,7 +158,7 @@ iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0
 </div>
 
 <script>
-/* ===== FIREBASE INIT ===== */
+/* Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
   authDomain: "coolwebsitechat.firebaseapp.com",
@@ -193,7 +176,7 @@ let adminEmail = "nathanjlloyd123@gmail.com";
 let bannedUsers = {};
 let typingTimeout;
 
-/* ===== LOGIN ===== */
+/* Login */
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(result=>{
@@ -202,71 +185,32 @@ function login(){
   }).catch(()=>alert("Login failed."));
 }
 
-/* ===== CONTENT SWITCH ===== */
+/* Content */
 function setContent(html){document.getElementById("content").innerHTML = html;}
 function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);}
 function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);}
 function showChat(){
-  setContent(`
-    <h1>Chat Room</h1>
+  setContent(`<h1>Chat Room</h1>
     <div class="chat-box" id="chatBox"></div>
     <div class="typing-indicator" id="typingIndicator"></div>
     <input type="text" id="messageInput" placeholder="Type a message..." oninput="userTyping()" />
     <input type="file" id="imageInput" accept="image/*" />
-    <button class="button" onclick="sendMessage()">Send</button>
-  `);
+    <button class="button" onclick="sendMessage()">Send</button>`);
   loadMessages();
 }
 function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
-
-/* ===== AI ASSISTANT ===== */
-function showAI(){
-  setContent(`
-    <h1>🤖 AI Assistant</h1>
-    <div class="chat-box" id="aiBox" style="height:350px; overflow-y:auto;"></div>
-    <input type="text" id="aiInput" placeholder="Ask me anything..." />
-    <button class="button" onclick="aiAsk()">Send</button>
-  `);
-}
-
-function aiAsk(){
-  const input = document.getElementById("aiInput").value.trim();
-  if(!input) return;
-  const box = document.getElementById("aiBox");
-  const userMsg = document.createElement("div");
-  userMsg.className="message";
-  userMsg.innerHTML=`<strong>You:</strong> ${input}`;
-  box.appendChild(userMsg);
-  
-  const botMsg = document.createElement("div");
-  botMsg.className="message";
-  botMsg.innerHTML=`<strong>AI:</strong> Thinking...`;
-  box.appendChild(botMsg);
-  box.scrollTop=box.scrollHeight;
-  
-  setTimeout(()=>{ // placeholder AI response
-    botMsg.innerHTML=`<strong>AI:</strong> Sorry me brudda, I'm still learning 😎.`;
-    box.scrollTop=box.scrollHeight;
-  },1000);
-  document.getElementById("aiInput").value="";
-}
-
-/* ===== THEMES ===== */
 function showThemes(){
-  setContent(`
-    <h1>🎨 Themes</h1>
+  setContent(`<h1>🎨 Themes</h1>
     <select id="themeSelect" onchange="applyTheme(this.value)">
       <option value="green">Neon Green</option>
       <option value="cyan">Cyan</option>
       <option value="purple">Purple</option>
       <option value="pink">Pink</option>
-    </select>
-  `);
+    </select>`);
   const saved = localStorage.getItem("theme") || "green";
   document.getElementById("themeSelect").value = saved;
   applyTheme(saved);
 }
-
 function applyTheme(theme){
   let bgColors;
   switch(theme){
@@ -280,18 +224,15 @@ function applyTheme(theme){
   localStorage.setItem("theme", theme);
 }
 
-/* ===== ADMIN ===== */
+/* Admin */
 function showAdmin(){
   const user = auth.currentUser;
   if(!user || user.email !== adminEmail){alert("Admin only"); return;}
-  setContent(`
-    <h1>Admin Panel</h1>
+  setContent(`<h1>Admin Panel</h1>
     <button class="button" onclick="showAnalytics()">📊 Analytics</button>
     <button class="button" onclick="showBanList()">🚫 Ban List</button>
-    <div id="adminContent"></div>
-  `);
+    <div id="adminContent"></div>`);
 }
-
 function showAnalytics(){
   const adminContent = document.getElementById("adminContent");
   adminContent.innerHTML=`<div class="chat-box" id="analyticsBox"></div>`;
@@ -305,7 +246,6 @@ function showAnalytics(){
                    <strong>Total Users:</strong> ${usersSet.size}`;
   });
 }
-
 function showBanList(){
   const adminContent = document.getElementById("adminContent");
   adminContent.innerHTML=`<div class="chat-box" id="banBox"></div>`;
@@ -318,14 +258,11 @@ function showBanList(){
     box.appendChild(userDiv);
   });
 }
-
 function unbanUser(user){ delete bannedUsers[user]; alert(user+" unbanned"); showBanList(); }
 
-/* ===== PROFANITY FILTER ===== */
+/* Chat */
 const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
 function filterMessage(text){let filtered=text; badWords.forEach(word=>{const regex=new RegExp(word,'gi'); filtered=filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
-
-/* ===== CHAT ===== */
 function sendMessage(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
   const text = document.getElementById("messageInput").value.trim();
@@ -341,7 +278,6 @@ function sendMessage(){
   document.getElementById("imageInput").value="";
   db.ref("typing").remove();
 }
-
 function loadMessages(){
   const chatBox = document.getElementById("chatBox");
   chatBox.innerHTML="";
@@ -360,52 +296,21 @@ function loadMessages(){
     const msgDiv = document.getElementById(snapshot.key);
     if(msgDiv) msgDiv.remove();
   });
-
   db.ref("typing").on("value", snap=>{
     const typingUser = snap.val();
     const indicator = document.getElementById("typingIndicator");
-    if(typingUser){
-      indicator.innerHTML = `${typingUser} is typing<span>.</span><span>.</span><span>.</span>`;
-    } else {
-      indicator.innerHTML = "";
-    }
+    if(typingUser){ indicator.innerHTML = `${typingUser} is typing<span>.</span><span>.</span><span>.</span>`; }
+    else { indicator.innerHTML = ""; }
   });
 }
-
-/* ===== ADMIN CHAT ===== */
-function loadAdminMessages(){
-  const chatBox = document.getElementById("adminChat");
-  chatBox.innerHTML="";
-  db.ref("messages").off();
-  db.ref("messages").on("child_added", snapshot=>{
-    const msg = snapshot.val();
-    const msgDiv = document.createElement("div");
-    msgDiv.className="message";
-    msgDiv.id = snapshot.key;
-    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image? `<br><img src="${msg.image}" width="100"/>` : ""} 
-      <span class="delete-button" onclick="deleteMessage('${snapshot.key}')">❌</span>
-      <span class="ban-button" onclick="banUser('${msg.name}')">🚫</span>`;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop=chatBox.scrollHeight;
-  });
-  db.ref("messages").on("child_removed", snapshot=>{
-    const msgDiv = document.getElementById(snapshot.key);
-    if(msgDiv) msgDiv.remove();
-  });
-}
-
 function deleteMessage(key){ db.ref("messages/"+key).remove(); }
-function banUser(name){ bannedUsers[name]=true; alert(name+" banned"); loadAdminMessages(); }
-
-/* ===== TYPING INDICATOR ===== */
+function banUser(name){ bannedUsers[name]=true; alert(name+" banned"); loadMessages(); }
 function userTyping(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
   db.ref("typing").set(user);
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(()=>{ db.ref("typing").remove(); }, 1500);
 }
-
-/* ===== YOUTUBE SEARCH ===== */
 function searchAndPlay(){
   const query=document.getElementById("searchInput").value.trim();
   if(!query) return;
