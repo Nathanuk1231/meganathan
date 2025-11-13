@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 
 <style>
-* { box-sizing: border-box; margin:0; padding:0; }
+* { box-sizing: border-box; margin:0; padding:0; scroll-behavior:smooth; }
 body {
   font-family: 'Orbitron', sans-serif;
   background: radial-gradient(circle at top left, #0d1f16 0%, #000 80%);
@@ -25,6 +25,8 @@ body {
   align-items: center;
   overflow-x: hidden;
 }
+
+/* ===== NAVIGATION ===== */
 .nav {
   position: fixed;
   top: 20px;
@@ -39,6 +41,11 @@ body {
   z-index: 100;
   box-shadow: 0 0 25px rgba(0, 255, 100, 0.3);
   flex-wrap: wrap;
+  transition: all 0.4s ease;
+}
+.nav.hide {
+  top: -100px;
+  opacity: 0;
 }
 .nav a {
   color: #aaffaa;
@@ -51,6 +58,8 @@ body {
   color: #00ff80;
   text-shadow: 0 0 10px #00ff80;
 }
+
+/* ===== CONTAINER ===== */
 .container {
   margin-top: 120px;
   padding: 30px;
@@ -59,14 +68,20 @@ body {
   border-radius: 30px;
   backdrop-filter: blur(20px);
   box-shadow: 0 0 40px rgba(0, 255, 100, 0.15);
-  transition: 0.3s;
   width: 90%;
   max-width: 900px;
   text-align: center;
+  animation: pulse 3s infinite;
+  transition: 0.3s;
 }
-.container:hover { box-shadow: 0 0 50px rgba(0, 255, 120, 0.25); }
-h1 { font-size: 2.5rem; margin-bottom: 15px; color: #b8ffb8; text-shadow: 0 0 15px rgba(0,255,80,0.4);}
-p { font-size: 1.1rem; color: #d6ffd6; }
+.container:hover { box-shadow: 0 0 60px rgba(0, 255, 120, 0.35); }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 25px rgba(0,255,100,0.3); }
+  50% { box-shadow: 0 0 50px rgba(0,255,150,0.6); }
+}
+
+/* ===== BUTTONS ===== */
 .button {
   padding: 10px 25px;
   background: rgba(0, 255, 100, 0.15);
@@ -75,14 +90,18 @@ p { font-size: 1.1rem; color: #d6ffd6; }
   border-radius: 12px;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   backdrop-filter: blur(10px);
+  transform: perspective(400px) translateZ(0);
 }
 .button:hover {
   background: rgba(0,255,100,0.25);
   color: #00ff88;
-  box-shadow: 0 0 20px rgba(0,255,100,0.3);
+  box-shadow: 0 8px 20px rgba(0,255,100,0.4);
+  transform: perspective(400px) translateZ(10px);
 }
+
+/* ===== CHAT ===== */
 .chat-box {
   width: 100%;
   max-height: 350px;
@@ -107,6 +126,14 @@ p { font-size: 1.1rem; color: #d6ffd6; }
 .message strong { color:#00ff80; }
 .delete-button { color:#ff4d4d; cursor:pointer; float:right; }
 .ban-button { color:#ff8800; cursor:pointer; float:right; margin-right:5px;}
+.typing-indicator {
+  font-style: italic;
+  color: #00ff80;
+  text-shadow: 0 0 5px #00ff80;
+  margin-top: 5px;
+}
+
+/* ===== INPUTS ===== */
 input[type="text"], input[type="file"] {
   background: rgba(0,255,100,0.08);
   border:1px solid rgba(0,255,100,0.25);
@@ -120,7 +147,9 @@ input[type="text"], input[type="file"] {
   transition:0.3s;
 }
 input[type="text"]:focus { box-shadow:0 0 15px rgba(0,255,100,0.3); }
-iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1);}
+
+iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1); }
+
 @media(max-width:600px){
   .nav { flex-direction:column; padding:10px 20px;}
   .nav a { font-size:1rem; }
@@ -129,7 +158,7 @@ iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0
 </style>
 </head>
 <body>
-<div class="nav">
+<div class="nav" id="navbar">
   <a onclick="showHome()">Home</a>
   <a onclick="showGaming()">Gaming</a>
   <a onclick="showChat()">Chat</a>
@@ -145,6 +174,7 @@ iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0
 </div>
 
 <script>
+/* ===== FIREBASE INIT ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDgddDLpa2XSLvzNBzSd1dkkkZ5Kt32axM",
   authDomain: "coolwebsitechat.firebaseapp.com",
@@ -158,9 +188,12 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
+/* ===== GLOBALS ===== */
 let adminEmail = "nathanjlloyd123@gmail.com";
 let bannedUsers = {};
+let typingTimeout;
 
+/* ===== LOGIN ===== */
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(result=>{
@@ -169,24 +202,34 @@ function login(){
   }).catch(err=>{console.error(err); alert("Login failed.")});
 }
 
+/* ===== CONTENT SWITCH ===== */
 function setContent(html){document.getElementById("content").innerHTML = html;}
 function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);}
 function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);}
-function showChat(){setContent(`<h1>Chat Room</h1><div class="chat-box" id="chatBox"></div><input type="text" id="messageInput" placeholder="Type a message..." /><input type="file" id="imageInput" accept="image/*" /><button class="button" onclick="sendMessage()">Send</button>`); loadMessages();}
+function showChat(){
+  setContent(`
+    <h1>Chat Room</h1>
+    <div class="chat-box" id="chatBox"></div>
+    <div class="typing-indicator" id="typingIndicator"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." oninput="userTyping()" />
+    <input type="file" id="imageInput" accept="image/*" />
+    <button class="button" onclick="sendMessage()">Send</button>
+  `);
+  loadMessages();
+}
 function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
-
 function showAdmin(){
   const user = auth.currentUser;
   if(!user || user.email !== adminEmail){alert("Admin only"); return;}
-  setContent(`<h1>Admin Panel</h1>
-    <div class="chat-box" id="adminChat"></div>
-  `);
+  setContent(`<h1>Admin Panel</h1><div class="chat-box" id="adminChat"></div>`);
   loadAdminMessages();
 }
 
+/* ===== PROFANITY FILTER ===== */
 const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
 function filterMessage(text){let filtered=text; badWords.forEach(word=>{const regex=new RegExp(word,'gi'); filtered=filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
 
+/* ===== CHAT ===== */
 function sendMessage(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
   const text = document.getElementById("messageInput").value.trim();
@@ -196,6 +239,7 @@ function sendMessage(){
   if(imageFile){const reader=new FileReader(); reader.onloadend=()=>{messageObj.image=reader.result; db.ref("messages").push(messageObj);} ; reader.readAsDataURL(imageFile);}
   else db.ref("messages").push(messageObj);
   document.getElementById("messageInput").value=""; document.getElementById("imageInput").value="";
+  db.ref("typing").remove(); // clear typing indicator
 }
 
 function loadMessages(){
@@ -211,8 +255,16 @@ function loadMessages(){
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop=chatBox.scrollHeight;
   });
+
+  // Typing indicator
+  db.ref("typing").on("value", snap=>{
+    const typingUser = snap.val();
+    const indicator = document.getElementById("typingIndicator");
+    indicator.textContent = typingUser ? `${typingUser} is typing...` : "";
+  });
 }
 
+/* ===== ADMIN CHAT ===== */
 function loadAdminMessages(){
   const chatBox = document.getElementById("adminChat");
   chatBox.innerHTML="";
@@ -229,9 +281,19 @@ function loadAdminMessages(){
   });
 }
 
+/* ===== ADMIN FUNCTIONS ===== */
 function deleteMessage(key){db.ref("messages/"+key).remove();}
 function banUser(name){bannedUsers[name]=true; alert(name+" banned");}
 
+/* ===== TYPING INDICATOR ===== */
+function userTyping(){
+  const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
+  db.ref("typing").set(user);
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(()=>{db.ref("typing").remove();}, 2000);
+}
+
+/* ===== YOUTUBE SEARCH ===== */
 function searchAndPlay(){
   const query=document.getElementById("searchInput").value.trim();
   if(!query) return;
@@ -244,6 +306,16 @@ function searchAndPlay(){
       else alert("No video found.");
     }).catch(err=>alert("Failed to load video."));
 }
+
+/* ===== FLOATING NAV BAR ===== */
+let lastScroll = 0;
+window.addEventListener('scroll', ()=>{
+  const nav = document.getElementById('navbar');
+  const currentScroll = window.pageYOffset;
+  if(currentScroll > lastScroll && currentScroll > 100){ nav.classList.add('hide'); }
+  else { nav.classList.remove('hide'); }
+  lastScroll = currentScroll;
+});
 </script>
 </body>
 </html>
