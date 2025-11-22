@@ -49,11 +49,17 @@ body {
   animation: glowEdge 6s linear infinite;
 }
 @keyframes glowEdge {
-  0% { box-shadow: 0 0 25px rgba(0,255,120,0.4);}
-  50% { box-shadow: 0 0 50px rgba(0,255,180,0.7);}
-  100% { box-shadow: 0 0 25px rgba(0,255,120,0.4);}
+  0% { box-shadow: 0 0 25px rgba(0,255,120,0.4);} 
+  50% { box-shadow: 0 0 50px rgba(0,255,180,0.7);} 
+  100% { box-shadow: 0 0 25px rgba(0,255,120,0.4);} 
 }
-.nav a { color: #aaffaa; text-decoration: none; font-size: 1.2rem; cursor:pointer; transition:0.3s;}
+.nav a {
+  color: #aaffaa;
+  text-decoration: none;
+  font-size: 1.2rem;
+  cursor:pointer;
+  transition:0.3s;
+}
 .nav a:hover { color: #00ff80; text-shadow: 0 0 10px #00ff80; }
 .container {
   margin-top: 120px;
@@ -70,8 +76,8 @@ body {
   transition: all 0.5s ease;
 }
 @keyframes edgeFlow {
-  0%,100% { box-shadow:0 0 30px rgba(0,255,120,0.3);}
-  50% { box-shadow:0 0 60px rgba(0,255,160,0.6);}
+  0%,100% { box-shadow:0 0 30px rgba(0,255,120,0.3);} 
+  50% { box-shadow:0 0 60px rgba(0,255,160,0.6);} 
 }
 .button {
   padding:10px 25px;
@@ -133,8 +139,8 @@ input[type="text"], input[type="file"], select {
 input[type="text"]:focus, select:focus { box-shadow:0 0 15px rgba(0,255,100,0.3); }
 iframe { border-radius:20px; border:1px solid rgba(0,255,100,0.25); box-shadow:0 0 25px rgba(0,255,100,0.1); }
 @media(max-width:600px){
-  .nav { flex-direction:column; padding:10px 20px;}
-  .nav a { font-size:1rem; }
+  .nav { flex-direction:column; padding:10px 20px;} 
+  .nav a { font-size:1rem; } 
   .container { padding:20px; }
 }
 </style>
@@ -187,8 +193,8 @@ function login(){
 
 /* Content */
 function setContent(html){document.getElementById("content").innerHTML = html;}
-function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);}
-function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);}
+function showHome(){setContent(`<h1>Welcome to My Cool Website</h1><p>Click the buttons above to explore the site!</p><img src="https://i.pinimg.com/236x/cf/51/84/cf518486538c012b242504b8232587a7.jpg" width="250" />`);} 
+function showGaming(){setContent(`<h1>Gaming Section</h1><iframe src="https://chromedino.com/" width="100%" height="400"></iframe>`);} 
 function showChat(){
   setContent(`<h1>Chat Room</h1>
     <div class="chat-box" id="chatBox"></div>
@@ -198,7 +204,7 @@ function showChat(){
     <button class="button" onclick="sendMessage()">Send</button>`);
   loadMessages();
 }
-function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);}
+function showMusic(){setContent(`<h1>🎶 Music Jukebox</h1><input id="searchInput" type="text" placeholder="Enter a song..." /><button class="button" onclick="searchAndPlay()">Search & Play</button><div style="margin-top:20px;"><iframe id="ytplayer" width="100%" height="315" src="" frameborder="0" allowfullscreen></iframe></div>`);} 
 function showThemes(){
   setContent(`<h1>🎨 Themes</h1>
     <select id="themeSelect" onchange="applyTheme(this.value)">
@@ -284,11 +290,22 @@ function loadMessages(){
   db.ref("messages").off();
   db.ref("messages").on("child_added", snapshot=>{
     const msg = snapshot.val();
+    const key = snapshot.key;
     if(bannedUsers[msg.name]) return;
+
+    const user = auth.currentUser;
+    const isAdmin = user && user.email === adminEmail;
+
     const msgDiv=document.createElement("div");
     msgDiv.className="message";
-    msgDiv.id = snapshot.key;
-    msgDiv.innerHTML=`<strong>${msg.name}:</strong> ${msg.text || ""} ${msg.image ? `<br><img src="${msg.image}" width="100"/>` : ""}`;
+    msgDiv.id = key;
+
+    msgDiv.innerHTML = `
+      <strong>${msg.name}:</strong> ${msg.text || ""} 
+      ${msg.image ? `<br><img src="${msg.image}" width="100"/>` : ""}
+      ${isAdmin ? `<span class=\"delete-button\" onclick=\"deleteMessage('${key}')\">[Delete]</span>` : ""}
+    `;
+
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop=chatBox.scrollHeight;
   });
