@@ -267,8 +267,28 @@ function showBanList(){
 function unbanUser(user){ delete bannedUsers[user]; alert(user+" unbanned"); showBanList(); }
 
 /* Chat */
-const badWords = ["shit","cunt","pussy","retard","nword","asshole","ass","porn","gay","prick","penis","dick","bitch"];
-function filterMessage(text){let filtered=text; badWords.forEach(word=>{const regex=new RegExp(word,'gi'); filtered=filtered.replace(regex,'*'.repeat(word.length));}); return filtered;}
+const badWords = [
+  "Arse","Bloody","Bugger","Cow","Crap","Damn","Ginger","Git","God","Goddam","Jesus Christ","Minger","Sod-off",
+  "Arsehole","Balls","Bint","Bitch","Bollocks","Bullshit","Feck","Munter","Pissed","pissed off","Shit","Son of a bitch","Tits",
+  "Bastard","Beaver","Beef curtains","Bellend","Bloodclaat","Clunge","Cock","Dick","Dickhead","Fanny","Flaps","Gash","Knob","Minge","Prick","Punani","Pussy","Snatch","Twat",
+  "Cunt","Fuck","Motherfucker"
+];
+function filterMessage(text){
+  // Fuzzy profanity filter: normalize by removing symbols and lowering
+  const normalize = s => s.toLowerCase().replace(/[^a-z]/g, "");
+  const cleaned = normalize(text);
+  let blocked = false;
+
+  badWords.forEach(word=>{
+    const nw = normalize(word);
+    if(cleaned.includes(nw)) blocked = true;
+  });
+
+  if(blocked){
+    return "[Message Blocked]";
+  }
+  return text;
+}}
 function sendMessage(){
   const user = auth.currentUser ? auth.currentUser.displayName : "Guest";
   const text = document.getElementById("messageInput").value.trim();
