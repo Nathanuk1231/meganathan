@@ -28,49 +28,30 @@ async function loadWeather() {
   const widget = document.getElementById('weatherWidget');
   if (!widget) return;
 
-  try {
-    let lat, lon, city;
+  function fetchWeather(lat, lon, city) {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true')
+      .then(r => r.json())
+      .then(w => {
+        const temp = Math.round(w.current_weather.temperature);
+        const code = w.current_weather.weathercode;
+        widget.innerHTML = '<div class="weather-widget">' +
+          '<div class="weather-icon">' + weatherIcon(code) + '</div>' +
+          '<div>' +
+            '<div class="weather-temp">' + temp + '°C</div>' +
+            '<div class="weather-desc">' + weatherDesc(code) + '</div>' +
+            '<div class="weather-loc">📍 ' + esc(city) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).catch(() => { widget.innerHTML = ''; });
+  }
 
-    try {
-      const geoRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
-      if (!geoRes.ok) throw new Error('ipapi failed');
-      const geo = await geoRes.json();
-      if (geo.error) throw new Error('ipapi error');
-      lat = geo.latitude;
-      lon = geo.longitude;
-      city = geo.city;
-    } catch {
-      try {
-        const geoRes2 = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) });
-        const geo2 = await geoRes2.json();
-        lat = geo2.latitude;
-        lon = geo2.longitude;
-        city = geo2.city;
-      } catch {
-        lat = 51.5;
-        lon = -0.1;
-        city = 'London';
-      }
-    }
-
-    const wRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`,
-      { signal: AbortSignal.timeout(5000) }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => fetchWeather(pos.coords.latitude, pos.coords.longitude, 'Your location'),
+      () => fetchWeather(51.5, -0.1, 'London')
     );
-    const w = await wRes.json();
-    const temp = Math.round(w.current_weather.temperature);
-    const code = w.current_weather.weathercode;
-
-    widget.innerHTML = `<div class="weather-widget">
-      <div class="weather-icon">${weatherIcon(code)}</div>
-      <div>
-        <div class="weather-temp">${temp}°C</div>
-        <div class="weather-desc">${weatherDesc(code)}</div>
-        <div class="weather-loc">📍 ${esc(city || 'Unknown')}</div>
-      </div>
-    </div>`;
-  } catch {
-    widget.innerHTML = '';
+  } else {
+    fetchWeather(51.5, -0.1, 'London');
   }
 }
 

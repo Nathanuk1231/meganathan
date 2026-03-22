@@ -38,28 +38,46 @@ export function doLogout() {
 }
 
 function ensureProfile(user) {
-  if (!validateUID(user.uid)) return;
-  db.ref('profiles/' + user.uid).once('value').then(s => {
-    if (!s.exists()) {
-      db.ref('profiles/' + user.uid).set({
-        displayName: user.displayName || 'User',
-        photoURL: user.photoURL || '',
-        bio: '',
-        joinedAt: ts(),
-        messageCount: 0,
-        streak: 0,
-        lastLogin: ts(),
-        uid: user.uid,
-        email: user.email,
-        status: 'online'
-      });
-    } else {
-      db.ref('profiles/' + user.uid).update({
-        lastLogin: ts(),
-        uid: user.uid,
-        email: user.email
+  if (!validateUID(user.uid)) return Promise.resolve();
+
+  return db.ref('profiles/' + user.uid).once('value').then(s => {
+    const existing = s.val();
+    const base = {
+      displayName: user.displayName || 'User',
+      photoURL: user.photoURL || '',
+      bio: '',
+      joinedAt: ts(),
+      messageCount: 0,
+      streak: 0,
+      lastLogin: ts(),
+      uid: user.uid,
+      email: user.email,
+      status: 'online'
+    };
+
+    if (!existing) {
+      return db.ref('profiles/' + user.uid).set(base);
+    }
+
+    if (!existing.uid || existing.uid !== user.uid) {
+      return db.ref('profiles/' + user.uid).set({
+        ...base,
+        displayName: existing.displayName || user.displayName || 'User',
+        photoURL: existing.photoURL || user.photoURL || '',
+        bio: existing.bio || '',
+        joinedAt: existing.joinedAt || ts(),
+        messageCount: existing.messageCount || 0,
+        streak: existing.streak || 0,
+        status: existing.status || 'online'
       });
     }
+
+    return db.ref('profiles/' + user.uid).update({
+      lastLogin: ts(),
+      uid: user.uid,
+      email: user.email,
+      displayName: existing.displayName || user.displayName || 'User'
+    });
   }).catch(() => {});
 }
 
@@ -70,20 +88,17 @@ auth.onAuthStateChanged(user => {
   if (user) {
     if (!validateUID(user.uid)) { doLogout(); return; }
 
-    ensureProfile(user);
     checkAdminStatus(user.uid);
 
-    db.ref('profiles/' + user.uid).once('value').then(s => {
+    ensureProfile(user).then(() => {
+      return db.ref('profiles/' + user.uid).once('value');
+    }).then(s => {
       const profile = s.val();
-      if (profile) {
-        currentProfile = profile;
-        updateNav(user, profile);
-        if (window.profile) window.profile.checkStreak(user.uid);
-        if (window.notifications) window.notifications.loadNotifCount(user.uid);
-        if (window.chat) window.chat.loadCustomEmojis();
-      } else {
-        updateNav(user, null);
-      }
+      currentProfile = profile || null;
+      updateNav(user, profile);
+      if (window.profile) window.profile.checkStreak(user.uid);
+      if (window.notifications) window.notifications.loadNotifCount(user.uid);
+      if (window.chat) window.chat.loadCustomEmojis();
     }).catch(() => updateNav(user, null));
 
     const onRef = db.ref('online/' + user.uid);
@@ -102,22 +117,21 @@ export function updateNav(user, p) {
     const photo = (p && p.photoURL) || user.photoURL || '';
     const name = (p && p.displayName) || user.displayName || 'User';
     const avHTML = photo
-      ? `<img class="nav-avatar" src="${photo}" onerror="this.style.display='none'">`
+      ? '<img class="nav-avatar" src="' + photo + '" onerror="this.style.display=\'none\'">'
       : '<span style="font-size:1.1rem">👤</span>';
 
-    r.innerHTML = `
-      ${isAdmin() ? `<a onclick="app.showPage('admin')">⚙️</a>` : ''}
-      <a onclick="app.showPage('dm')" title="DMs">✉️</a>
-      <a id="notifNavBtn" class="notif-dot" data-count="0" onclick="app.showPage('notifs')" title="Notifications">🔔</a>
-      <a onclick="app.showPage('profile')" style="display:flex;align-items:center;gap:6px;">${avHTML}<span style="font-size:0.8rem;color:var(--muted);">${name}</span></a>
-      <button class="btn btn-d btn-sm" onclick="auth.doLogout()">Out</button>
-    `;
+    r.innerHTML =
+      (isAdmin() ? '<a onclick="app.showPage(\'admin\')">⚙️</a>' : '') +
+      '<a onclick="app.showPage(\'dm\')" title="DMs">✉️</a>' +
+      '<a id="notifNavBtn" class="notif-dot" data-count="0" onclick="app.showPage(\'notifs\')" title="Notifications">🔔</a>' +
+      '<a onclick="app.showPage(\'profile\')" style="display:flex;align-items:center;gap:6px;">' + avHTML + '<span style="font-size:0.8rem;color:var(--muted);">' + name + '</span></a>' +
+      '<button class="btn btn-d btn-sm" onclick="auth.doLogout()">Out</button>';
 
     if (window.notifications && window.notifications.notifCount > 0) {
       document.getElementById('notifNavBtn')?.setAttribute('data-count', window.notifications.notifCount);
     }
   } else {
-    r.innerHTML = `<button class="btn btn-p btn-sm" onclick="auth.doLogin()">Sign In</button>`;
+    r.innerHTML = '<button class="btn btn-p btn-sm" onclick="auth.doLogin()">Sign In</button>';
   }
 }
 
