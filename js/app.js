@@ -7,14 +7,16 @@ export function showPage(id) {
   document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
   document.getElementById('page-' + id)?.classList.add('active');
   document.getElementById('nav-' + id)?.classList.add('active');
-  
+
   if (id === 'chat' && window.chat) window.chat.initChat();
   if (id === 'home') loadHomeStats();
   if (id === 'profile' && window.profile) window.profile.renderProfile();
   if (id === 'leaderboard' && window.games) window.games.loadLeaderboard();
   if (id === 'friends' && window.friends) window.friends.loadFriends();
   if (id === 'notifs' && window.notifications) window.notifications.loadNotifs();
-  if (id === 'themes' && window.themes) {
+  if (id === 'servers' && window.servers) window.servers.loadServers();
+  if (id === 'dm' && window.dm) window.dm.loadDMs();
+  if (id === 'themes') {
     const s = localStorage.getItem('theme') || 'green';
     document.querySelectorAll('.theme-sw').forEach(x => x.classList.remove('active'));
     document.getElementById('th-' + s)?.classList.add('active');
@@ -25,30 +27,49 @@ export function showPage(id) {
 async function loadWeather() {
   const widget = document.getElementById('weatherWidget');
   if (!widget) return;
-  
+
   try {
-    const geoRes = await fetch('https://ipapi.co/json/');
-    const geo = await geoRes.json();
-    const lat = geo.latitude || 51.5;
-    const lon = geo.longitude || -0.1;
-    const city = geo.city || 'Your area';
-    
-    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability`);
+    let lat, lon, city;
+
+    try {
+      const geoRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+      if (!geoRes.ok) throw new Error('ipapi failed');
+      const geo = await geoRes.json();
+      if (geo.error) throw new Error('ipapi error');
+      lat = geo.latitude;
+      lon = geo.longitude;
+      city = geo.city;
+    } catch {
+      try {
+        const geoRes2 = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) });
+        const geo2 = await geoRes2.json();
+        lat = geo2.latitude;
+        lon = geo2.longitude;
+        city = geo2.city;
+      } catch {
+        lat = 51.5;
+        lon = -0.1;
+        city = 'London';
+      }
+    }
+
+    const wRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`,
+      { signal: AbortSignal.timeout(5000) }
+    );
     const w = await wRes.json();
     const temp = Math.round(w.current_weather.temperature);
     const code = w.current_weather.weathercode;
-    const icon = weatherIcon(code);
-    const desc = weatherDesc(code);
-    
+
     widget.innerHTML = `<div class="weather-widget">
-      <div class="weather-icon">${icon}</div>
+      <div class="weather-icon">${weatherIcon(code)}</div>
       <div>
         <div class="weather-temp">${temp}°C</div>
-        <div class="weather-desc">${desc}</div>
-        <div class="weather-loc">📍 ${esc(city)}</div>
+        <div class="weather-desc">${weatherDesc(code)}</div>
+        <div class="weather-loc">📍 ${esc(city || 'Unknown')}</div>
       </div>
     </div>`;
-  } catch (e) {
+  } catch {
     widget.innerHTML = '';
   }
 }
@@ -78,7 +99,7 @@ function weatherDesc(c) {
 
 function loadHomeStats() {
   loadWeather();
-  
+
   let total = 0, done = 0;
   ['general', 'random', 'gaming', 'music-chat'].forEach(ch => {
     db.ref('messages/' + ch).once('value').then(s => {
@@ -90,12 +111,12 @@ function loadHomeStats() {
       }
     }).catch(() => { done++; });
   });
-  
+
   db.ref('profiles').once('value').then(s => {
     const el = document.getElementById('statUsers');
     if (el) el.textContent = s.numChildren();
   }).catch(() => {});
-  
+
   db.ref('online').once('value').then(s => {
     const el = document.getElementById('statOnline');
     if (el) el.textContent = s.numChildren();
@@ -104,7 +125,7 @@ function loadHomeStats() {
 
 function createPages() {
   const app = document.getElementById('app');
-  
+
   app.innerHTML = `
     <div class="page active" id="page-home">
       <div id="weatherWidget"></div>
@@ -114,6 +135,7 @@ function createPages() {
         <p class="muted" style="margin:10px auto 24px;max-width:460px;font-size:1rem;">Chat, game, and vibe with your crew — all in one neon-lit corner of the web.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <button class="btn btn-p" onclick="app.showPage('chat')">💬 Open Chat</button>
+          <button class="btn" onclick="app.showPage('servers')">🌐 Servers</button>
           <button class="btn" onclick="app.showPage('gaming')">🎮 Play Games</button>
         </div>
       </div>
@@ -125,6 +147,8 @@ function createPages() {
       </div>
       <div class="quick-grid">
         <div class="quick-card" onclick="app.showPage('chat')"><div class="quick-icon">💬</div><h3>Global Chat</h3><p>Real-time with everyone</p></div>
+        <div class="quick-card" onclick="app.showPage('servers')"><div class="quick-icon">🌐</div><h3>Servers</h3><p>Create or join communities</p></div>
+        <div class="quick-card" onclick="app.showPage('dm')"><div class="quick-icon">✉️</div><h3>Direct Messages</h3><p>Private conversations</p></div>
         <div class="quick-card" onclick="app.showPage('gaming')"><div class="quick-icon">🎮</div><h3>Games</h3><p>Snake, Dino, 2048 & more</p></div>
         <div class="quick-card" onclick="app.showPage('music')"><div class="quick-icon">🎵</div><h3>Music</h3><p>Search any YouTube track</p></div>
         <div class="quick-card" onclick="app.showPage('profile')"><div class="quick-icon">👤</div><h3>Profile</h3><p>Customise your avatar & bio</p></div>
@@ -191,6 +215,81 @@ function createPages() {
           <div id="imgPrevBar">
             <span id="imgPrevName"></span>
             <button class="btn btn-xs btn-d" onclick="chat.clearImg()">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-servers">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+        <h1 class="accent">🌐 Servers</h1>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-p btn-sm" onclick="servers.openCreateServer()">+ Create Server</button>
+          <button class="btn btn-sm" onclick="servers.openJoinServer()">🔗 Join by Code</button>
+        </div>
+      </div>
+      <div id="myServersList" style="margin-bottom:24px;"></div>
+      <h2 style="margin-bottom:12px;">Public Servers</h2>
+      <div id="publicServersList"></div>
+    </div>
+
+    <div class="page" id="page-server-view">
+      <div class="chat-wrap" style="height:calc(100vh - 120px);">
+        <div class="chat-side" style="min-width:180px;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+            <button class="btn btn-xs" onclick="app.showPage('servers')">←</button>
+            <div id="serverViewName" style="font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+          </div>
+          <div class="panel-hd" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Channels</span>
+            <button class="btn btn-xs" id="addChBtn" onclick="servers.openAddChannel()" style="display:none;">+</button>
+          </div>
+          <div class="ch-list" id="serverChList"></div>
+          <div class="panel-hd" style="border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span>Members</span>
+            <span id="serverMemberCount" style="color:var(--muted);font-size:0.75rem;"></span>
+          </div>
+          <div class="user-list" id="serverMemberList"></div>
+          <div style="padding:10px;border-top:1px solid var(--border);">
+            <button class="btn btn-xs btn-d" id="leaveServerBtn" onclick="servers.leaveServer()" style="width:100%;">Leave Server</button>
+            <button class="btn btn-xs btn-p" id="serverSettingsBtn" onclick="servers.openServerSettings()" style="width:100%;margin-top:6px;display:none;">⚙️ Settings</button>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-hd">
+            <span id="serverChIcon" style="font-size:1.1rem;">#</span>
+            <div><div class="chat-title" id="serverChTitle">Select a channel</div></div>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+              <button class="btn btn-xs" onclick="calls.startVoiceCall()" title="Voice Call">🎙️ Call</button>
+            </div>
+          </div>
+          <div class="messages" id="serverChatBox"></div>
+          <div class="typing-bar" id="serverTypingBar"></div>
+          <div class="chat-inp-row">
+            <div class="inp-wrap">
+              <textarea id="serverMsgInput" placeholder="Message…" rows="1"
+                oninput="chat.autoResize(this);servers.userTyping();" onkeydown="servers.msgKD(event)"></textarea>
+            </div>
+            <button class="btn btn-p" onclick="servers.sendMsg()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-dm">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+        <h1 class="accent">✉️ Direct Messages</h1>
+        <button class="btn btn-p btn-sm" onclick="dm.openNewDM()">+ New Message</button>
+      </div>
+      <div class="chat-wrap" style="height:calc(100vh - 160px);">
+        <div class="chat-side">
+          <div class="panel-hd">Conversations</div>
+          <div class="ch-list" id="dmList" style="flex:1;overflow-y:auto;padding:6px;"></div>
+        </div>
+        <div class="chat-main" id="dmChatArea">
+          <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);flex-direction:column;gap:8px;">
+            <div style="font-size:2rem;">✉️</div>
+            <p>Select a conversation or start a new one</p>
           </div>
         </div>
       </div>
@@ -338,27 +437,15 @@ function createPages() {
       <div class="card" id="adminBans"></div>
     </div>
   `;
-  
-  const modals = document.createElement('div');
-  modals.id = 'modals';
-  document.body.appendChild(modals);
 }
 
 function init() {
   createPages();
-  
-  if (window.themes) {
-    window.themes.loadSavedTheme();
-  }
-  
-  if (window.music) {
-    window.music.setMusicSource('sc');
-  }
-  
-  if (window.admin) {
-    window.admin.listenAnnouncements();
-  }
-  
+
+  if (window.themes) window.themes.loadSavedTheme();
+  if (window.music) window.music.setMusicSource('sc');
+  if (window.admin) window.admin.listenAnnouncements();
+
   showPage('home');
 }
 

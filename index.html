@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.firebaseio.com https://w.soundcloud.com https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://api.soundcloud.com https://ipapi.co https://api.open-meteo.com; frame-src 'self' https://*.firebaseio.com https://w.soundcloud.com https://www.youtube-nocookie.com https://chromedino.com https://2048game.com https://chvin.github.io https://freepacman.org; media-src 'self' https:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.gstatic.com https://api.soundcloud.com https://ipapi.co https://api.open-meteo.com https://ipwho.is https://ip-api.com; frame-src https://w.soundcloud.com https://www.youtube-nocookie.com https://chromedino.com https://2048game.com https://chvin.github.io https://freepacman.org https://coolwebsitechat-default-rtdb.firebaseio.com; media-src 'self' https:; worker-src 'self' blob:">
 <title>NeonVerse</title>
 <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-auth.js"></script>
@@ -20,6 +20,7 @@
   <div class="nav-logo" onclick="app.showPage('home')">⬡ NeonVerse</div>
   <a onclick="app.showPage('home')" id="nav-home"><span>Home</span></a>
   <a onclick="app.showPage('chat')" id="nav-chat"><span>Chat</span></a>
+  <a onclick="app.showPage('servers')" id="nav-servers"><span>Servers</span></a>
   <a onclick="app.showPage('gaming')" id="nav-gaming"><span>Games</span></a>
   <a onclick="app.showPage('music')" id="nav-music"><span>Music</span></a>
   <a onclick="app.showPage('themes')" id="nav-themes"><span>Themes</span></a>
@@ -40,6 +41,9 @@
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/profile.js"></script>
 <script type="module" src="js/chat.js"></script>
+<script type="module" src="js/servers.js"></script>
+<script type="module" src="js/dm.js"></script>
+<script type="module" src="js/calls.js"></script>
 <script type="module" src="js/games.js"></script>
 <script type="module" src="js/music.js"></script>
 <script type="module" src="js/themes.js"></script>
